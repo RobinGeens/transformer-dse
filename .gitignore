@@ -1,6 +1,7 @@
 # User-defined
 out
 .vscode
+zigzag
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
