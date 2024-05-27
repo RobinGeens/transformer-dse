@@ -1,4 +1,17 @@
-zigzag-dse
+# zigzag-dse==3.1.0
 torch
 onnx
 onnxscript
+
+# Zigzag: temp
+numpy
+networkx
+sympy
+matplotlib
+onnx
+tqdm
+multiprocessing_on_dill
+pyyaml
+pytest
+typeguard
+cerberus
