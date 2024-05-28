@@ -36,7 +36,7 @@ memories:
         tl: r_port_1
         fl: w_port_2
         th: r_port_2
-    served_dimensions: [D1]
+    served_dimensions: [D2]
 
   sram_2MB:
     size: 16777216
@@ -84,7 +84,7 @@ memories:
         th: rw_port_1
     served_dimensions: [D1, D2]
 
-multipliers:
+operational_array:
   input_precision: [8, 8]
   multiplier_energy: 0.04 # pJ
   multiplier_area: 1 # unit
