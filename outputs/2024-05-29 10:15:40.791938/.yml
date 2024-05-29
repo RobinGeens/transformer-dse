@@ -1,0 +1,253 @@
+inputs:
+  accelerator:
+    cores:
+    - dataflows: null
+      id: 1
+      mem_hierarchy_dict:
+        I1:
+        - MemoryLevel(instance=sram_2MB,operands=[I1, O], served_dimensions={D1, D2})
+        - MemoryLevel(instance=dram,operands=[I1, I2, O], served_dimensions={D1, D2})
+        I2:
+        - MemoryLevel(instance=rf_128B,operands=[I2], served_dimensions=set())
+        - MemoryLevel(instance=dram,operands=[I1, I2, O], served_dimensions={D1, D2})
+        O:
+        - MemoryLevel(instance=rf_2B,operands=[O], served_dimensions={D2})
+        - MemoryLevel(instance=sram_2MB,operands=[I1, O], served_dimensions={D1, D2})
+        - MemoryLevel(instance=dram,operands=[I1, I2, O], served_dimensions={D1, D2})
+      mem_r_bw_dict:
+        I1:
+        - 2048
+        - 64
+        I2:
+        - 8
+        - 64
+        O:
+        - 16
+        - 2048
+        - 64
+      mem_r_bw_min_dict:
+        I1:
+        - 64
+        - 64
+        I2:
+        - 8
+        - 64
+        O:
+        - 16
+        - 64
+        - 64
+      mem_sharing_list:
+      - I1: 1
+        I2: 1
+        O: 2
+      - I1: 0
+        O: 1
+      mem_size_dict:
+        I1:
+        - 16777216
+        - 10000000000
+        I2:
+        - 1024
+        - 10000000000
+        O:
+        - 16
+        - 16777216
+        - 10000000000
+      mem_w_bw_dict:
+        I1:
+        - 2048
+        - 64
+        I2:
+        - 8
+        - 64
+        O:
+        - 16
+        - 2048
+        - 64
+      mem_w_bw_min_dict:
+        I1:
+        - 64
+        - 64
+        I2:
+        - 8
+        - 64
+        O:
+        - 16
+        - 64
+        - 64
+      memory_hierarchy:
+        memory_levels:
+        - MemoryLevel(instance=rf_128B,operands=[I2], served_dimensions=set())
+        - MemoryLevel(instance=rf_2B,operands=[O], served_dimensions={D2})
+        - MemoryLevel(instance=sram_2MB,operands=[I1, O], served_dimensions={D1, D2})
+        - MemoryLevel(instance=dram,operands=[I1, I2, O], served_dimensions={D1, D2})
+      operational_array:
+        dimensions:
+          D1: 32
+          D2: 32
+        operational_unit:
+          area: 1
+          cost: 0.04
+          input_precision:
+          - 8
+          - 8
+          output_precision: 16
+          precision:
+          - 8
+          - 8
+          - 16
+    name: tpu_like
+  layer:
+    core_allocation:
+    - 1
+    core_allocation_is_fixed: false
+    equation: O[b][k][d] = W[k][c] * I[b][c][d]
+    equation_relations: []
+    loop_dimensions:
+      B: 1
+      C: 528
+      D: 1024
+      K: 128
+    memory_operand_links:
+      I: I1
+      O: O
+      W: I2
+    operand_precision:
+      I: 8
+      O: 16
+      O_final: 8
+      W: 8
+    user_spatial_mapping:
+      D1:
+        K: 32
+      D2:
+        C: 32
+  spatial_mapping:
+    spatial_mapping:
+      I:
+      - - - K
+          - 32
+        - - C
+          - 31
+      - []
+      - []
+      O:
+      - - - C
+          - 31
+      - - - K
+          - 32
+      - []
+      - []
+      W:
+      - []
+      - - - K
+          - 32
+        - - C
+          - 31
+      - []
+  temporal_mapping:
+    temporal_mapping:
+      I:
+      - - - C
+          - 17
+        - - K
+          - 2
+        - - K
+          - 2
+        - - D
+          - 16
+        - - D
+          - 16
+        - - D
+          - 4
+      - []
+      O:
+      - - - C
+          - 17
+      - - - K
+          - 2
+        - - K
+          - 2
+        - - D
+          - 16
+        - - D
+          - 16
+        - - D
+          - 4
+      - []
+      W:
+      - - - C
+          - 17
+        - - K
+          - 2
+        - - K
+          - 2
+        - - D
+          - 16
+        - - D
+          - 16
+        - - D
+          - 4
+      - []
+outputs:
+  energy:
+    energy_total: 79785701.72
+    memory_energy: 77017461.08
+    memory_energy_breakdown_per_level:
+      I:
+      - 4421437.44
+      - 47308800
+      O:
+      - 96337.92000000001
+      - 406814.72
+      - 12288000
+      W:
+      - 6581771.0
+      - 5914300
+    memory_energy_breakdown_per_level_per_operand:
+      I:
+      - '4waydatamoving (rd /\: 0.0, wr V: 799180.7999999999, rd V: 3622256.64, wr
+        /\: 0.0)'
+      - '4waydatamoving (rd /\: 0, wr V: 0, rd V: 47308800, wr /\: 0)'
+      O:
+      - '4waydatamoving (rd /\: 2752.512, wr V: 0.0, rd V: 46792.704000000005, wr
+        /\: 46792.704000000005)'
+      - '4waydatamoving (rd /\: 213073.92, wr V: 0.0, rd V: 0.0, wr /\: 193740.8)'
+      - '4waydatamoving (rd /\: 0, wr V: 0, rd V: 0, wr /\: 12288000)'
+      W:
+      - '4waydatamoving (rd /\: 0.0, wr V: 6421.24, rd V: 6575349.76, wr /\: 0.0)'
+      - '4waydatamoving (rd /\: 0, wr V: 0, rd V: 5914300, wr /\: 0)'
+    operational_energy: 2768240.64
+  latency:
+    computation: 69632
+    data_offloading: 16385
+    data_onloading: 67456
+  memory:
+    utilization:
+      I:
+      - 0.3203125
+      - 0.0005914624
+      O:
+      - 0.5
+      - 0.3203125
+      - 0.0005914624
+      W:
+      - 0.53125
+      - 0.0005914624
+    word_accesses:
+      I:
+      - '4waydatamoving (rd /\: 0, wr V: 2112, rd V: 8704, wr /\: 0)'
+      - '4waydatamoving (rd /\: 0, wr V: 0, rd V: 67584, wr /\: 0)'
+      O:
+      - '4waydatamoving (rd /\: 131072, wr V: 0, rd V: 2228224, wr /\: 2228224)'
+      - '4waydatamoving (rd /\: 512, wr V: 0, rd V: 0, wr /\: 512)'
+      - '4waydatamoving (rd /\: 0, wr V: 0, rd V: 0, wr /\: 16384)'
+      W:
+      - '4waydatamoving (rd /\: 0, wr V: 67592, rd V: 69214208, wr /\: 0)'
+      - '4waydatamoving (rd /\: 0, wr V: 0, rd V: 8449, wr /\: 0)'
+  spatial:
+    mac_utilization:
+      ideal: 0.9705882352941176
+      stalls: 0.9705882352941176
+      stalls_onloading: 0.49299719887955185
+      stalls_onloading_offloading: 0.440364103132147
