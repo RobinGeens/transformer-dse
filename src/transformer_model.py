@@ -6,12 +6,11 @@ from torch import Tensor
 import torch.nn as nn
 from torch.nn import functional as F
 
-from config import LLMConfig
+from src.config import LLMConfig
 
 
 device = "cpu"
 dropout = 0.3
-VOCAB_SIZE = 1000
 
 
 class Matmul(nn.Module):
@@ -112,11 +111,11 @@ class LanguageModel(nn.Module):
     def __init__(self, cfg: LLMConfig):
         super().__init__()  # type: ignore
         # each token directly reads off the logits for the next token from a lookup table
-        self.token_embedding_table = nn.Embedding(VOCAB_SIZE, cfg.embedding_dim)
+        self.token_embedding_table = nn.Embedding(cfg.vocab_size, cfg.embedding_dim)
         self.position_embedding_table = nn.Embedding(cfg.seq_len, cfg.embedding_dim)
         self.blocks = nn.Sequential(*[Block(cfg) for _ in range(cfg.num_layer)])
         self.layer_norm_final = nn.LayerNorm(cfg.embedding_dim)
-        self.de_embed = nn.Linear(cfg.embedding_dim, VOCAB_SIZE)
+        self.de_embed = nn.Linear(cfg.embedding_dim, cfg.vocab_size)
 
     def forward(self, idx: Tensor):
         _, L = idx.shape

@@ -1,8 +1,8 @@
 import onnx
 import torch
-from transformer_model import LanguageModel
+from src.transformer_model import LanguageModel
 
-from config import LLAMA_7B, LLMConfig
+from src.config import LLAMA_7B, LLMConfig
 
 
 def export_transformer_to_onnx(cfg: LLMConfig):

@@ -9,6 +9,7 @@ class LLMConfig:
     dim_ff: int
     num_head: int
     num_layer: int
+    vocab_size: int = 1000
 
     @property
     def head_size(self):
@@ -24,25 +25,28 @@ class LLMConfig:
             dim_ff=self.dim_ff,
             num_head=1,
             num_layer=1,
+            vocab_size=self.vocab_size,
         )
 
 
 LLAMA_7B = LLMConfig(
     batch_size=1,
-    seq_len=2048,
+    seq_len=4096,
     embedding_dim=4096,
     dim_ff=16384,
     num_head=32,
     num_layer=32,
+    vocab_size=32_000,
 )
 
 LLAMA_13B = LLMConfig(
     batch_size=1,
-    seq_len=2048,
+    seq_len=4096,
     embedding_dim=5120,
-    dim_ff=20480,
+    dim_ff=13824,
     num_head=40,
     num_layer=40,
+    vocab_size=32_000,
 )
 
 OPT_125M = LLMConfig(
