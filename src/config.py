@@ -10,6 +10,7 @@ class LLMConfig:
     num_head: int
     num_layer: int
     vocab_size: int = 1000
+    name: str = ""
 
     @property
     def head_size(self):
@@ -26,6 +27,7 @@ class LLMConfig:
             num_head=1,
             num_layer=1,
             vocab_size=self.vocab_size,
+            name=self.name,
         )
 
 
@@ -34,21 +36,9 @@ class QuantConfig:
     act_bits: int
     weight_bits: int
 
-
-# class FullConfig:
-
-#     def __init__(self, llm_config: LLMConfig, quant_config: QuantConfig):
-
-#         # Unpack
-#         self.batch_size = llm_config.batch_size
-#         self.seq_len = llm_config.seq_len
-#         self.embedding_dim = llm_config.embedding_dim
-#         self.dim_ff = llm_config.dim_ff
-#         self.num_head = llm_config.num_head
-#         self.num_layer = llm_config.num_layer
-#         self.vocab_size = llm_config.vocab_size
-#         self.act_bits = quant_config.act_bits
-#         self.weight_bits = quant_config.weight_bits
+    @property
+    def name(self):
+        return f"W{self.weight_bits}A{self.act_bits}"
 
 
 W8A8 = QuantConfig(8, 8)
@@ -61,6 +51,7 @@ LLAMA_7B = LLMConfig(
     num_head=32,
     num_layer=32,
     vocab_size=32_000,
+    name="LLAMA_7B",
 )
 
 LLAMA_13B = LLMConfig(
@@ -71,6 +62,7 @@ LLAMA_13B = LLMConfig(
     num_head=40,
     num_layer=40,
     vocab_size=32_000,
+    name="LLAMA_13B",
 )
 
 OPT_125M = LLMConfig(
@@ -80,4 +72,5 @@ OPT_125M = LLMConfig(
     dim_ff=3072,
     num_head=12,
     num_layer=12,
+    name="OPT_125M",
 )

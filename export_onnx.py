@@ -1,3 +1,4 @@
+import os
 from typing import Any
 import onnx
 from onnx import NodeProto
@@ -7,10 +8,15 @@ from src.transformer_model import LanguageModel
 from src.config import LLAMA_7B, W8A8, LLMConfig, QuantConfig
 
 
-def export_transformer_to_onnx(llm_config: LLMConfig, quant_config: QuantConfig):
-    path = "out/custom_transformer.onnx"
+def export_transformer_to_onnx(
+    llm_config: LLMConfig, quant_config: QuantConfig, path: str = "out/custom_transformer.onnx"
+):
+    print(f"Generating ONNX model at {path}")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     model = LanguageModel(llm_config)
-    dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, llm_config.seq_len))
+    dummy_input = torch.randint(
+        low=0, high=(2**quant_config.act_bits), size=(llm_config.batch_size, llm_config.seq_len)
+    )
 
     torch.onnx.export(  # type: ignore
         model,

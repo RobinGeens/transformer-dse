@@ -8,7 +8,7 @@ from src.config import LLAMA_13B
 
 model = LLAMA_13B
 workload_path = "out/custom_transformer.onnx"
-accelerator_path = "inputs/hardware/tpu_custom.yaml"
+accelerator_path = "inputs/hardware/tpu_like.yaml"
 mapping_path = "inputs/mapping/default.yaml"
 pickle_filename = "out/TPU-saved_list_of_cmes.pickle"
 RE_RUN = True
@@ -20,7 +20,6 @@ if RE_RUN:
         accelerator=accelerator_path,
         mapping=mapping_path,
         opt="EDP",
-        dump_folder="outputs",
         pickle_filename=pickle_filename,
         nb_spatial_mappings_generated=1,
     )
@@ -30,7 +29,6 @@ if RE_RUN:
 with open(pickle_filename, "rb") as fp:
     cmes = pickle.load(fp)
 
-# TODO no add?
 layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "out_proj", "feedforward_expand", "feedforward_contract"]
 cmes_to_plot = [next(filter(lambda x: name in x.layer.name, cmes)) for name in layers_to_plot]
 
