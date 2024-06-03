@@ -1,5 +1,6 @@
 # zigzag-dse==3.1.0
 torch
 onnx
+onnxruntime
 onnxscript
 

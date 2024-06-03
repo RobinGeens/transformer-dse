@@ -39,7 +39,7 @@ memories:
     served_dimensions: [D2]
 
   sram_2MB:
-    size: 16_777_216
+    size: 1_000_000_000 #16_777_216
     r_bw: 2048
     w_bw: 2048
     r_cost: 416.16

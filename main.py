@@ -5,7 +5,6 @@ from zigzag.visualization.results.plot_cme import (
 )
 
 from src.config import LLAMA_13B
-from src.export_onnx import export_transformer_to_onnx
 
 model = LLAMA_13B
 workload_path = "out/custom_transformer.onnx"
@@ -20,7 +19,8 @@ if RE_RUN:
         workload=workload_path,
         accelerator=accelerator_path,
         mapping=mapping_path,
-        opt="energy",
+        opt="EDP",
+        dump_folder="outputs",
         pickle_filename=pickle_filename,
         nb_spatial_mappings_generated=1,
     )

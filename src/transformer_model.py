@@ -17,7 +17,7 @@ class Matmul(nn.Module):
     """Wrap Torch Matmul operator so that the operation can be given a custom name that is exported to ONNX"""
 
     def forward(self, a: Tensor, b: Tensor):
-        return a @ b  #
+        return a @ b
 
 
 class Head(nn.Module):
