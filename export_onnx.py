@@ -5,11 +5,11 @@ from onnx import NodeProto
 import torch
 
 from src.transformer_model import LanguageModel
-from src.config import LLAMA_7B, W8A8, LLMConfig, QuantConfig
+from src.config import LLAMA_1_7B, W8A8, LLMConfig, QuantConfig
 
 
 def export_transformer_to_onnx(
-    llm_config: LLMConfig, quant_config: QuantConfig, path: str = "out/custom_transformer.onnx"
+    llm_config: LLMConfig, quant_config: QuantConfig, path: str = "outputs/custom_transformer.onnx"
 ):
     print(f"Generating ONNX model at {path}")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -54,6 +54,6 @@ def add_attribute_to_onnx_node(node: NodeProto, key: str, val: Any):
 
 
 if __name__ == "__main__":
-    llm_config = LLAMA_7B.to_simulatable_config()
+    llm_config = LLAMA_1_7B.to_simulatable_config()
     quant_config = W8A8
     export_transformer_to_onnx(llm_config, quant_config)

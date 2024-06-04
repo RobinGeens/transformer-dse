@@ -2,22 +2,21 @@ import itertools
 import json
 import os
 import pickle
-from typing import Any
 from zigzag import api
 from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 
 from export_onnx import export_transformer_to_onnx
-from src.config import LLAMA_7B, LLAMA_13B, OPT_125M, W8A8, LLMConfig
+from src.config import ALL_MODELS, W8A8, LLMConfig
 
-models = [LLAMA_7B, LLAMA_13B, OPT_125M]
+models = ALL_MODELS
 quants = [W8A8]
 accelerators = ["tpu_like", "tpu_big_sram"]
 
 mapping_path = "inputs/mapping/default.yaml"
 
-layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "out_proj", "feedforward_expand", "feedforward_contract"]
+layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "feedforward_expand", "feedforward_contract"]
 
 
 def accelerator_path(accelerator: str):
@@ -27,15 +26,30 @@ def accelerator_path(accelerator: str):
 def get_post_simulation_factor(cfg: LLMConfig, layer: str):
     """The model is simulated with reduced parameters i.e. only one layer. This function returns the factor with which
     the results for the given layer have to be multiplied in order to come to the result for the full model"""
-    if layer.endswith("_proj"):
+    if "_proj" in layer:
         # K, Q, V and output projection
         return 4 * cfg.num_head * cfg.num_layer
-    elif layer.startswith("mul_"):
+    elif "mul_" in layer:
         return cfg.num_head * cfg.num_layer
-    elif layer.startswith("feedforward_"):
+    elif "feedforward_" in layer:
         return cfg.num_layer
     else:
         return 1
+
+
+def generalize_layer_name(layer: str):
+    if "key_proj" in layer:
+        return "linear projection"
+    elif "mul_qk_t" in layer:
+        return "mul K*Q^T"
+    elif "mul_logits" in layer:
+        return "mul attn*V"
+    elif "feedforward_expand" in layer:
+        return "MLP layer 1"
+    elif "feedforward_contract" in layer:
+        return "MLP layer 2"
+    else:
+        return layer
 
 
 if __name__ == "__main__":
@@ -49,7 +63,7 @@ if __name__ == "__main__":
         if not os.path.exists(onnx_path):
             export_transformer_to_onnx(model.to_simulatable_config(), quant, path=onnx_path)
 
-        energy, latency, cmes = api.get_hardware_performance_zigzag(
+        api.get_hardware_performance_zigzag(
             workload=onnx_path,
             accelerator=accelerator_path(accelerator),
             mapping=mapping_path,
@@ -62,17 +76,30 @@ if __name__ == "__main__":
         with open(pickle_filename, "rb") as fp:
             cmes = pickle.load(fp)
 
+        # Plots for single layers
         cmes_to_plot = [next(filter(lambda x: name in x.layer.name, cmes)) for name in layers_to_plot]
-        bar_plot_cost_model_evaluations_breakdown(cmes, save_path=f"{dump_path}/plot_breakdown_all.png")
-        bar_plot_cost_model_evaluations_breakdown(cmes_to_plot, save_path=f"{dump_path}/plot_breakdown.png")
-
-        with open(f"{dump_path}/info.txt", "w") as f:
-            f.write("Layers currently shown in plot:\n")
-            for idx, cme in enumerate(cmes_to_plot):
-                f.write(f"Layer{idx}: {cme.layer.name}\n")
+        bar_plot_cost_model_evaluations_breakdown(cmes, save_path=f"{dump_path}/all_layers_single.png")
+        bar_plot_cost_model_evaluations_breakdown(cmes_to_plot, save_path=f"{dump_path}/interesting_layers_single.png")
 
         # Compute full results
         complete_result_cmes = [cme * get_post_simulation_factor(model, cme.layer.name) for cme in cmes_to_plot]
-        result_dump_dict = {cme.layer.name: cme.__jsonrepr__() for cme in complete_result_cmes}
+        bar_plot_cost_model_evaluations_breakdown(
+            complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
+        )
+        result_dump_dict = {
+            generalize_layer_name(cme.layer.name): cme.__simplejsonrepr__() for cme in complete_result_cmes
+        }
         with open(f"{dump_path}/full_model_result.json", "w") as f:
             json.dump(result_dump_dict, f, indent=4)
+
+        # Save which layers are plotted
+        with open(f"{dump_path}/info.txt", "w") as f:
+            f.write("Layers shown in plot interesting_layers_single:\n")
+            for idx, cme in enumerate(cmes_to_plot):
+                f.write(f"\t{idx}: {cme.layer.name}\n")
+            f.write("Components shown in plot interesting_layers_full:\n")
+            for idx, cme in enumerate(cmes_to_plot):
+                f.write(f"\t{idx}: {generalize_layer_name(cme.layer.name)}\n")
+            f.write("Components shown in plot all_layers_single:\n")
+            for idx, cme in enumerate(cmes):
+                f.write(f"\t{idx}: {cme.layer.name}\n")
