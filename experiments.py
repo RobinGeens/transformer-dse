@@ -8,13 +8,13 @@ from zigzag.visualization.results.plot_cme import (
 )
 
 from export_onnx import export_transformer_to_onnx
-from src.config import ALL_MODELS, W8A8, LLMConfig
+from src.config import ALL_MODELS, W4A16, W4A8, W8A8, LLMConfig
 
 models = ALL_MODELS
-quants = [W8A8]
-accelerators = ["tpu_like", "tpu_big_sram"]
+quants = [W8A8, W4A16, W4A8]
+accelerators = ["tpu_like"]  # , "tpu_big_sram"]
 
-mapping_path = "inputs/mapping/default.yaml"
+mapping_path = "inputs/mapping/empty.yaml"
 
 layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "feedforward_expand", "feedforward_contract"]
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             opt="EDP",
             dump_folder=dump_path,
             pickle_filename=pickle_filename,
-            nb_spatial_mappings_generated=1,
+            nb_spatial_mappings_generated=3,
         )
 
         with open(pickle_filename, "rb") as fp:

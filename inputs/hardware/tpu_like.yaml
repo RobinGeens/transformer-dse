@@ -20,11 +20,11 @@ memories:
     served_dimensions: [] # Fully unrolled over all multipliers
 
   rf_2B:
-    size: 16
-    r_bw: 16
-    w_bw: 16
-    r_cost: 0.021
-    w_cost: 0.021
+    size: 32 # changed from 16
+    r_bw: 32 # changed from 16
+    w_bw: 32 # changed from 16
+    r_cost: 0.042 # changed from 0.021
+    w_cost: 0.042 # changed from 0.021
     area: 0
     r_port: 2
     w_port: 2
@@ -71,7 +71,7 @@ memories:
     r_port: 0
     w_port: 0
     rw_port: 1
-    latency: 1
+    latency: 10 # changed from 1
     operands: [I1, I2, O]
     ports:
       - fh: rw_port_1

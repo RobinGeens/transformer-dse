@@ -60,7 +60,8 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, cfg: LLMConfig):
         super().__init__()  # type: ignore
         self.heads = nn.ModuleList([Head(cfg) for _ in range(cfg.num_head)])
-        self.out_proj = nn.Linear(cfg.embedding_dim, cfg.embedding_dim, bias=False)
+        # NOTE normally, `num_head * head_size` equals `embedding_dim`
+        self.out_proj = nn.Linear(cfg.num_head * cfg.head_size, cfg.embedding_dim, bias=False)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: Tensor):

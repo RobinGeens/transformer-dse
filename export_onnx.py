@@ -14,9 +14,7 @@ def export_transformer_to_onnx(
     print(f"Generating ONNX model at {path}")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     model = LanguageModel(llm_config)
-    dummy_input = torch.randint(
-        low=0, high=(2**quant_config.act_bits), size=(llm_config.batch_size, llm_config.seq_len)
-    )
+    dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, llm_config.seq_len))
 
     torch.onnx.export(  # type: ignore
         model,
@@ -41,7 +39,7 @@ def export_transformer_to_onnx(
     onnx_model = onnx.load(path)  # type: ignore
     onnx.checker.check_model(onnx_model)  # type: ignore
     for node in onnx_model.graph.node:
-        if node.op_type in ["Add", "Matmul", "Gemm", "Softmax"]:
+        if node.op_type in ["Add", "MatMul", "Gemm", "Softmax"]:
             add_attribute_to_onnx_node(node, "weight_size", quant_config.weight_bits)
             add_attribute_to_onnx_node(node, "act_size", quant_config.act_bits)
 
