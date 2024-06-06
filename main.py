@@ -26,7 +26,7 @@ if RE_RUN:
         workload=workload_path,
         accelerator=accelerator_path,
         mapping=mapping_path,
-        opt="EDP",
+        opt="energy",
         pickle_filename=pickle_filename,
         nb_spatial_mappings_generated=1,
     )
