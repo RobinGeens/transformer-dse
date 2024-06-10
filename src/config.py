@@ -32,12 +32,12 @@ class LLMConfig:
         can then be multiplied to get the actual energy/latency values"""
         return LLMConfig(
             batch_size=self.batch_size,
-            seq_len=self.seq_len,
+            seq_len=self.seq_len // 2,  # Prefill half the context window
             embedding_dim=self.embedding_dim,
             dim_ff=self.dim_ff,
             num_head=1,
             num_layer=1,
-            head_size=self.head_size,  # Keep original so it doesn't get re-computed
+            # Recompute head size, consider 1 big MatMu for all heads simultaneously
             vocab_size=self.vocab_size,
             name=self.name,
         )
@@ -85,7 +85,7 @@ LLAMA_1_30B = LLMConfig(
     embedding_dim=6_656,
     dim_ff=17_920,
     num_head=52,
-    num_layer=52,  # ! or 60?
+    num_layer=60,
     vocab_size=32_000,
     name="LLAMA_1_30B",
 )
@@ -196,7 +196,7 @@ ALL_MODELS = [
     # LLAMA_1_13B,
     LLAMA_1_30B,
     # LLAMA_2_7B,
-    LLAMA_2_13B,
+    # LLAMA_2_13B,
     OPT_125M,
     # OPT_1_3B,
     # OPT_2_7B,

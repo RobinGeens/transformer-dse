@@ -10,11 +10,11 @@ from zigzag.visualization.results.plot_cme import (
 from export_onnx import export_transformer_to_onnx
 from src.config import ALL_MODELS, LLAMA_1_7B, W4A16, W4A8, W8A8, LLMConfig
 
-models = [LLAMA_1_7B]  ##ALL_MODELS
-quants = [W8A8, W4A16, W4A8]
-accelerators = ["tpu_like"]  # , "tpu_big_sram"]
+models = ALL_MODELS
+quants = [W8A8, W4A16]  # , W4A8]
+accelerators = ["generic_array"]  # , "tpu_big_sram"]
 
-mapping_path = "inputs/mapping/default.yaml"
+mapping_path = "inputs/mapping/output_st_256.yaml"
 
 layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "feedforward_expand", "feedforward_contract"]
 
@@ -28,7 +28,7 @@ def get_post_simulation_factor(cfg: LLMConfig, layer: str):
     the results for the given layer have to be multiplied in order to come to the result for the full model"""
     if "_proj" in layer:
         # K, Q, V and output projection
-        return 4 * cfg.num_head * cfg.num_layer
+        return 4 * cfg.num_layer
     elif "mul_" in layer:
         return cfg.num_head * cfg.num_layer
     elif "feedforward_" in layer:
