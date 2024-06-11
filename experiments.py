@@ -8,14 +8,14 @@ from zigzag.visualization.results.plot_cme import (
 )
 
 from export_onnx import export_transformer_to_onnx
-from src.config import ALL_MODELS, LLAMA_1_7B, W4A16, W4A8, W8A8, LLMConfig
+from src.config import ALL_MODELS, BATCH_SIZE, LLAMA_1_7B, W4A16, W4A8, W8A8, LLMConfig
 
 models = ALL_MODELS
 quants = [W8A8, W4A16]  # , W4A8]
-accelerators = ["generic_array"]  # , "tpu_big_sram"]
+accelerators = ["generic_array"]
+batch_sizes = [1, BATCH_SIZE]
 
 mapping_path = "inputs/mapping/output_st_256.yaml"
-
 layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "feedforward_expand", "feedforward_contract"]
 
 
@@ -23,21 +23,9 @@ def accelerator_path(accelerator: str):
     return f"inputs/hardware/{accelerator}.yaml"
 
 
-def get_post_simulation_factor(cfg: LLMConfig, layer: str):
-    """The model is simulated with reduced parameters i.e. only one layer. This function returns the factor with which
-    the results for the given layer have to be multiplied in order to come to the result for the full model"""
-    if "_proj" in layer:
-        # K, Q, V and output projection
-        return 4 * cfg.num_layer
-    elif "mul_" in layer:
-        return cfg.num_head * cfg.num_layer
-    elif "feedforward_" in layer:
-        return cfg.num_layer
-    else:
-        return 1
-
-
 def generalize_layer_name(layer: str):
+    """Give the layer name a prettier format, and generalize single layers to full LLM. e.g. key projection -> all
+    linear projections"""
     if "key_proj" in layer:
         return "linear projection"
     elif "mul_qk_t" in layer:
@@ -53,12 +41,16 @@ def generalize_layer_name(layer: str):
 
 
 if __name__ == "__main__":
-    for model, accelerator, quant in itertools.product(models, accelerators, quants):
+    for model, accelerator, quant, batch_size in itertools.product(models, accelerators, quants, batch_sizes):
+
+        # Overwrite batch size for the experiment
+        model.batch_size = batch_size
 
         experiment_name = f"{model.name}_{quant.name}_{accelerator}"
         dump_path = f"outputs/{experiment_name}"
         onnx_path = f"outputs/onnx/{model.name}_{quant.name}.onnx"
         pickle_filename = f"{dump_path}/cmes.pickle"
+        print(f"--- Running {experiment_name} ---")
 
         if not os.path.exists(onnx_path):
             export_transformer_to_onnx(model.to_simulatable_config(), quant, path=onnx_path)
@@ -70,7 +62,7 @@ if __name__ == "__main__":
             opt="EDP",
             dump_folder=dump_path,
             pickle_filename=pickle_filename,
-            nb_spatial_mappings_generated=1,
+            nb_spatial_mappings_generated=3,
         )
 
         with open(pickle_filename, "rb") as fp:
@@ -81,8 +73,8 @@ if __name__ == "__main__":
         bar_plot_cost_model_evaluations_breakdown(cmes, save_path=f"{dump_path}/all_layers_single.png")
         bar_plot_cost_model_evaluations_breakdown(cmes_to_plot, save_path=f"{dump_path}/interesting_layers_single.png")
 
-        # Compute full results
-        complete_result_cmes = [cme * get_post_simulation_factor(model, cme.layer.name) for cme in cmes_to_plot]
+        # Compute generalized results for full LLM
+        complete_result_cmes = [cme * model.get_post_simulation_factor(cme.layer.name) for cme in cmes_to_plot]
         bar_plot_cost_model_evaluations_breakdown(
             complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
         )
@@ -97,6 +89,10 @@ if __name__ == "__main__":
             f.write("Layers shown in plot interesting_layers_single:\n")
             for idx, cme in enumerate(cmes_to_plot):
                 f.write(f"\t{idx}: {cme.layer.name}\n")
+            f.write(
+                "\tNote: the linear projection shows a single projection (e.g. key) for ALL heads. The MatMuls "
+                "(attention and logits) are shown for a SINGLE head.\n"
+            )
             f.write("Components shown in plot interesting_layers_full:\n")
             for idx, cme in enumerate(cmes_to_plot):
                 f.write(f"\t{idx}: {generalize_layer_name(cme.layer.name)}\n")

@@ -25,12 +25,8 @@ class Head(nn.Module):
 
     def __init__(self, cfg: LLMConfig):
         super().__init__()  # type: ignore
-        self.head_size = cfg.head_size
+        self.cfg = cfg
 
-        # Operations (ONNX will keep the names)
-        self.key_proj = nn.Linear(cfg.embedding_dim, cfg.head_size, bias=False)
-        self.query_proj = nn.Linear(cfg.embedding_dim, cfg.head_size, bias=False)
-        self.value_proj = nn.Linear(cfg.embedding_dim, cfg.head_size, bias=False)
         self.mul_qk_t = Matmul()
         self.mul_logits_v = Matmul()
 
@@ -38,15 +34,13 @@ class Head(nn.Module):
         self.register_buffer("tril", torch.tril(torch.ones(cfg.seq_len, cfg.seq_len)))
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x: Tensor):
-        _, L, _ = x.shape
-        key: Tensor = self.key_proj(x)  # (B, L, d_h)
-        query: Tensor = self.query_proj(x)  # (B, L, d_h)
-        value: Tensor = self.value_proj(x)  # (B, L, d_h)
+    def forward(self, key: Tensor, query: Tensor, value: Tensor):
+
+        _, L, _ = key.shape
         key_transpose = key.transpose(-2, -1)
 
         attention: Tensor = self.mul_qk_t(query, key_transpose)  # (B, L, d_h) @ (B, d_h, L) -> (B, L, L)
-        attention = attention / math.sqrt(self.head_size)
+        attention = attention / math.sqrt(self.cfg.head_size)
         attention = attention.masked_fill(self.tril[:L, :L] == 0, float("-inf"))  # (B, L, L)
 
         logits = F.softmax(attention, dim=-1)  # (B, L, L)
@@ -59,13 +53,37 @@ class MultiHeadAttention(nn.Module):
 
     def __init__(self, cfg: LLMConfig):
         super().__init__()  # type: ignore
+        self.cfg = cfg
         self.heads = nn.ModuleList([Head(cfg) for _ in range(cfg.num_head)])
-        # NOTE normally, `num_head * head_size` equals `embedding_dim`
+
+        # We compute each linear projection as one big MatMul to ensure spatial array utilization
+        self.key_proj = nn.Linear(cfg.embedding_dim, cfg.embedding_dim, bias=False)
+        self.query_proj = nn.Linear(cfg.embedding_dim, cfg.embedding_dim, bias=False)
+        self.value_proj = nn.Linear(cfg.embedding_dim, cfg.embedding_dim, bias=False)
+
+        # NOTE  `num_head * head_size` must equal `embedding_dim`
         self.out_proj = nn.Linear(cfg.num_head * cfg.head_size, cfg.embedding_dim, bias=False)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: Tensor):
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        # `cfg.num_head` might be changed to shorten simulation time -> recompute the correct dimension
+        num_head_tensors = self.cfg.embedding_dim // self.cfg.head_size
+
+        # (B, L, num_head_tensors, d_h)
+        key: Tensor = self.key_proj(x).reshape(
+            self.cfg.batch_size, self.cfg.seq_len, num_head_tensors, self.cfg.head_size
+        )
+        query: Tensor = self.query_proj(x).reshape(
+            self.cfg.batch_size, self.cfg.seq_len, num_head_tensors, self.cfg.head_size
+        )
+        value: Tensor = self.value_proj(x).reshape(
+            self.cfg.batch_size, self.cfg.seq_len, num_head_tensors, self.cfg.head_size
+        )
+
+        out = torch.cat(
+            [head(key[:, :, idx, :], query[:, :, idx, :], value[:, :, idx, :]) for idx, head in enumerate(self.heads)],
+            dim=-1,
+        )
         out = self.out_proj(out)
         out = self.dropout(out)
         return out

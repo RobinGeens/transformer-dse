@@ -1,21 +1,21 @@
+from copy import deepcopy
 from dataclasses import dataclass
+
+BATCH_SIZE = 8
 
 
 class LLMConfig:
     def __init__(
         self,
-        batch_size: int,
         seq_len: int,
         embedding_dim: int,
         dim_ff: int,
         num_head: int,
         num_layer: int,
-        head_size: int | None = None,
+        batch_size: int = 1,
         vocab_size: int = 1000,
         name: str = "",
     ):
-        if head_size is None:
-            head_size = embedding_dim // num_head
 
         self.batch_size = batch_size
         self.seq_len = seq_len
@@ -23,24 +23,36 @@ class LLMConfig:
         self.dim_ff = dim_ff
         self.num_head = num_head
         self.num_layer = num_layer
-        self.head_size = head_size
+        self.head_size = embedding_dim // num_head
         self.vocab_size = vocab_size
-        self.name = name
+        self.__name = name
+
+    @property
+    def name(self):
+        return f"{self.__name}_B={self.batch_size}"
 
     def to_simulatable_config(self):
         """Return a new LLMConfig instance with reduced parameters to make the simulation go faster. The results
         can then be multiplied to get the actual energy/latency values"""
-        return LLMConfig(
-            batch_size=self.batch_size,
-            seq_len=self.seq_len // 2,  # Prefill half the context window
-            embedding_dim=self.embedding_dim,
-            dim_ff=self.dim_ff,
-            num_head=1,
-            num_layer=1,
-            # Recompute head size, consider 1 big MatMu for all heads simultaneously
-            vocab_size=self.vocab_size,
-            name=self.name,
-        )
+        cfg = deepcopy(self)
+        cfg.seq_len = cfg.seq_len // 2  # Prefill half the context window
+        cfg.num_layer = 1
+        cfg.num_head = 1  # Keep the original `head_size`!
+        return cfg
+
+    def get_post_simulation_factor(self, layer: str):
+        """The model is simulated with reduced parameters i.e. only one layer. This function returns the factor with
+        which the results for the given layer have to be multiplied in order to come to the result for the full model
+        Moreover, the results are normalized to a single inference instead of a full batch"""
+        if "_proj" in layer:
+            # K, Q, V and output projection
+            return 4 * self.num_layer / self.batch_size
+        elif "mul_" in layer:
+            return self.num_head * self.num_layer / self.batch_size
+        elif "feedforward_" in layer:
+            return self.num_layer / self.batch_size
+        else:
+            return 1
 
 
 @dataclass
@@ -58,7 +70,7 @@ W4A8 = QuantConfig(4, 8)
 W4A16 = QuantConfig(4, 16)
 
 LLAMA_1_7B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=4096,
     dim_ff=11_008,
@@ -69,7 +81,7 @@ LLAMA_1_7B = LLMConfig(
 )
 
 LLAMA_1_13B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=5120,
     dim_ff=13_824,
@@ -80,7 +92,7 @@ LLAMA_1_13B = LLMConfig(
 )
 
 LLAMA_1_30B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=6_656,
     dim_ff=17_920,
@@ -91,7 +103,7 @@ LLAMA_1_30B = LLMConfig(
 )
 
 LLAMA_2_7B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=4096,
     embedding_dim=4096,
     dim_ff=11_008,
@@ -102,7 +114,7 @@ LLAMA_2_7B = LLMConfig(
 )
 
 LLAMA_2_13B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=4096,
     embedding_dim=5120,
     dim_ff=13_824,
@@ -114,7 +126,7 @@ LLAMA_2_13B = LLMConfig(
 
 
 OPT_125M = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=768,
     dim_ff=3072,
@@ -126,7 +138,7 @@ OPT_125M = LLMConfig(
 
 
 OPT_1_3B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=2048,
     dim_ff=8_192,
@@ -137,7 +149,7 @@ OPT_1_3B = LLMConfig(
 )
 
 OPT_2_7B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=2560,
     dim_ff=10240,
@@ -148,7 +160,7 @@ OPT_2_7B = LLMConfig(
 )
 
 OPT_6_7B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=4096,
     dim_ff=16384,
@@ -159,7 +171,7 @@ OPT_6_7B = LLMConfig(
 )
 
 OPT_13B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=5120,
     dim_ff=20480,
@@ -170,7 +182,7 @@ OPT_13B = LLMConfig(
 )
 
 OPT_30B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=7_168,
     dim_ff=28_672,
@@ -181,7 +193,7 @@ OPT_30B = LLMConfig(
 )
 
 GPT3_175B = LLMConfig(
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     seq_len=2048,
     embedding_dim=12_288,
     dim_ff=49_152,
