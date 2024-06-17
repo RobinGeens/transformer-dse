@@ -7,19 +7,27 @@ name: generic_array
 # 32 MB @ 8 TB/s on-chip buffer
 # DRAM @ 400 GB/s
 
+# Energy values
+# DRAM: 10 pJ/bit
+# SRAM: 1 pJ/bit
+# RF:   0.01 pJ/bit
+# MAC:  0.01 pJ/bit
+# w_cost = 1.5x r_cost
+
 memories:
   rf_I:
     size: 16
     r_bw: 16
     w_bw: 16
-    # Derived using CACTI for 22nm
-    r_cost: 0.087863
-    w_cost: 0.159245
+    r_cost: 0.16
+    w_cost: 0.24
     area: 0
     r_port: 1
     w_port: 1
     rw_port: 0
     latency: 1
+    min_r_granularity: 8
+    min_w_granularity: 8
     operands: [I1]
     ports:
       - fh: w_port_1
@@ -30,14 +38,15 @@ memories:
     size: 16
     r_bw: 16
     w_bw: 16
-    # Derived using CACTI for 22nm
-    r_cost: 0.087863
-    w_cost: 0.159245
+    r_cost: 0.16
+    w_cost: 0.24
     area: 0
     r_port: 1
     w_port: 1
     rw_port: 0
     latency: 1
+    min_r_granularity: 4
+    min_w_granularity: 4
     operands: [I2]
     ports:
       - fh: w_port_1
@@ -48,13 +57,15 @@ memories:
     size: 32
     r_bw: 32
     w_bw: 32
-    r_cost: 0.199462 # 0.006 pJ/bit # ! 5x higher
-    w_cost: 0.295770
+    r_cost: 0.32
+    w_cost: 0.48
     area: 0
     r_port: 2
     w_port: 2
     rw_port: 0
     latency: 1
+    min_r_granularity: 16
+    min_w_granularity: 16
     operands: [O]
     ports:
       - fh: w_port_1
@@ -68,14 +79,15 @@ memories:
     size: 268_435_456
     r_bw: 8192
     w_bw: 8192
-    # Derived using CACTI for 22nm
-    r_cost: 24_031.3 # 2.933 pJ/bit # ! 14,7x higher!
-    w_cost: 35_705.8
+    r_cost: 8192
+    w_cost: 12_288
     area: 0
     r_port: 2
     w_port: 2
     rw_port: 0
     latency: 1
+    min_r_granularity: 256
+    min_w_granularity: 256
     operands: [I1, I2, O]
     ports:
       - fh: w_port_1
@@ -90,17 +102,18 @@ memories:
 
   dram:
     # From FLAT paper: 400 GB/s off-chip BW
-    size: 10000000000
+    size: 10000000000000000
     r_bw: 2048
     w_bw: 2048
-    # 3.9 pJ/bit
-    r_cost: 7987.2 # ! 3x lower than before!
-    w_cost: 7987.2
+    r_cost: 20_480
+    w_cost: 30_720
     area: 0
     r_port: 0
     w_port: 0
     rw_port: 1
-    latency: 10
+    latency: 1
+    min_r_granularity: 512
+    min_w_granularity: 512
     operands: [I1, I2, O]
     ports:
       - fh: rw_port_1
@@ -115,7 +128,7 @@ memories:
 
 operational_array:
   input_precision: [16, 16]
-  multiplier_energy: 0.04 # pJ
+  multiplier_energy: 0.16
   multiplier_area: 1 # unit
   dimensions: [D1, D2]
   sizes: [256, 256]

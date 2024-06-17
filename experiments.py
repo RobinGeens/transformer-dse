@@ -9,12 +9,12 @@ from zigzag.visualization.results.plot_cme import (
 )
 
 from export_onnx import export_transformer_to_onnx
-from src.config import ALL_MODELS, BATCH_SIZE, GPT3_175B, W4A16, W8A8
+from src.config import ALL_MODELS, BATCH_SIZE, W4A16, W8A8
 
 models = ALL_MODELS
 quants = [W8A8, W4A16]
 accelerators = ["generic_array"]
-batch_sizes = [1, BATCH_SIZE, 64]
+batch_sizes = [BATCH_SIZE]
 
 mapping_path = "inputs/mapping/output_st_256.yaml"
 layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "feedforward_expand", "feedforward_contract"]
