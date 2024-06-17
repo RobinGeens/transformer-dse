@@ -26,14 +26,10 @@ def export_transformer_to_onnx(
         input_names=["input"],
         output_names=["output"],
         verbose=False,
-        dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
     )
 
     # Perform shape inference in-place
     onnx.shape_inference.infer_shapes_path(path, path)  # type: ignore
-
-    # Prepare for quantization # NOTE this seems to do the same as `infer_shapes_path`
-    # quantization.shape_inference.quant_pre_process(path, path)  # type: ignore
 
     # Add attribute with quantization info, to be used in Zigzag
     onnx_model = onnx.load(path)  # type: ignore

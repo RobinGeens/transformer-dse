@@ -42,7 +42,7 @@ memories:
     size: 16777216
     r_bw: 2048
     w_bw: 2048
-    r_cost: 416.16
+    r_cost: 416.16 # 0.2 pJ/bit
     w_cost: 378.4
     area: 0
     r_port: 1
@@ -65,7 +65,7 @@ memories:
     size: 10000000000
     r_bw: 64
     w_bw: 64
-    r_cost: 700
+    r_cost: 700 # 10.9 pJ/bit
     w_cost: 750
     area: 0
     r_port: 0

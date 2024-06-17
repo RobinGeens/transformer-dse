@@ -44,11 +44,14 @@ class LLMConfig:
         """The model is simulated with reduced parameters i.e. only one layer. This function returns the factor with
         which the results for the given layer have to be multiplied in order to come to the result for the full model
         Moreover, the results are normalized to a single inference instead of a full batch"""
+        # K, Q, V and output projection
         if "_proj" in layer:
-            # K, Q, V and output projection
             return 4 * self.num_layer / self.batch_size
         elif "mul_" in layer:
             return self.num_head * self.num_layer / self.batch_size
+        # Special case: gate layer in Llama models
+        elif "feedforward_expand" in layer and "llama" in self.name.lower():
+            return 2 * self.num_layer / self.batch_size
         elif "feedforward_" in layer:
             return self.num_layer / self.batch_size
         else:
@@ -68,6 +71,7 @@ class QuantConfig:
 W8A8 = QuantConfig(8, 8)
 W4A8 = QuantConfig(4, 8)
 W4A16 = QuantConfig(4, 16)
+W16A32 = QuantConfig(16, 32)
 
 LLAMA_1_7B = LLMConfig(
     batch_size=BATCH_SIZE,

@@ -27,12 +27,12 @@ memories:
     served_dimensions: []
 
   rf_W: # For MatMul, this will store activations
-    size: 16
-    r_bw: 16
-    w_bw: 16
+    size: 4
+    r_bw: 4
+    w_bw: 4
     # Derived using CACTI for 22nm
-    r_cost: 0.087863
-    w_cost: 0.159245
+    r_cost: 0.02
+    w_cost: 0.04
     area: 0
     r_port: 1
     w_port: 1
@@ -64,13 +64,13 @@ memories:
     served_dimensions: []
 
   sram_32MB:
-    # From FLAT paper: 8 Tbit/s on-chip BW
+    # From FLAT paper: 8 TB/s on-chip BW
     size: 268_435_456
-    r_bw: 8192
-    w_bw: 8192
+    r_bw: 65_536
+    w_bw: 65_536
     # Derived using CACTI for 22nm
-    r_cost: 24_031.3 # 2.933 pJ/bit # ! 14,7x higher!
-    w_cost: 35_705.8
+    r_cost: 171_925 # 2.6 pJ/bit # ! 13x higher!
+    w_cost: 204_890
     area: 0
     r_port: 2
     w_port: 2
