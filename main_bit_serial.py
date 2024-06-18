@@ -1,19 +1,17 @@
 from datetime import datetime
-import os
 import pickle
 from zigzag import api
 from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
-from export_onnx import export_transformer_to_onnx
 from src.config import LLAMA_1_7B, W4A16
 
 model = LLAMA_1_7B
 quant = W4A16
 output_dir = f"/outputs/{datetime.now()}"
-workload_path = "inputs/workload/matmul_bit_unrolling.yaml"
-accelerator_path = "inputs/hardware/generic_array_bit_unrolling.yaml"
-mapping_path = "inputs/mapping/output_st_256_bit_unrolling.yaml"
+workload_path = "inputs/workload/matmul_bit_serial.yaml"
+accelerator_path = "inputs/hardware/generic_array_bit_serial.yaml"
+mapping_path = "inputs/mapping/output_st_256_bit_serial.yaml"
 pickle_filename = "outputs/TPU-cmes.pickle"
 
 energy, latency, cmes = api.get_hardware_performance_zigzag(

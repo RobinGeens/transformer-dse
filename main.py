@@ -6,14 +6,14 @@ from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 from export_onnx import export_transformer_to_onnx
-from src.config import GPT3_175B, LLAMA_1_7B, W16A32, W4A16, W4A8, W8A8
+from src.config import GPT3_175B, LLAMA_1_7B, OPT_125M, W16A32, W4A16, W4A8, W8A8
 
-model = LLAMA_1_7B
+model = OPT_125M
 quant = W4A16
 output_dir = f"/outputs/{datetime.now()}"
 workload_path = f"outputs/onnx/{model.name}_{quant.name}.onnx"
 # workload_path = "inputs/workload/matmul.yaml"
-accelerator_path = "inputs/hardware/generic_array_2MB.yaml"
+accelerator_path = "inputs/hardware/generic_array_edge.yaml"
 mapping_path = "inputs/mapping/output_st_256.yaml"
 pickle_filename = "outputs/TPU-cmes.pickle"
 RE_RUN = True
