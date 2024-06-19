@@ -14,7 +14,7 @@ from src.util import accelerator_path, generalize_layer_name, get_cmes_full_mode
 
 models = ALL_MODELS
 quants = [W8A8, W4A16]
-accelerators = ["generic_array"]
+accelerators = ["generic_array_edge"]  # ["generic_array", "generic_array_edge"]
 batch_sizes = [BATCH_SIZE]
 
 mapping_path = "inputs/mapping/output_st_256.yaml"

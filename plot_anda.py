@@ -3,6 +3,8 @@ from itertools import product
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+
+# import seaborn
 from zigzag import api
 
 from src.config import GPT3_175B, LLAMA_1_7B, W4A16
@@ -13,8 +15,10 @@ from src.util import CME_T, LAYERS_TO_PLOT, accelerator_path, get_cmes_full_mode
 groups = ["Linear projection", "Q*K^T", "S*V", "MLP 1", "MLP 2"]
 bars = ["MAC", "weight (INT4)", "act (FP16)", "output (FP32)"]
 bars_alt = ["MAC", "act1 (FP16)", "act2 (FP16)", "output (FP32)"]
+bars_alt_idx = [1, 2]  # Use alt bar names for bars at idx 1 and 2
 sections = ["MAC", "RF", "SRAM", "DRAM"]
 colors = ["#feb29b", "#bed2c6", "#ffd19d", "#ed8687"]
+# colors = seaborn.color_palette("Set2", len(sections))
 
 
 # Experiment info
@@ -24,7 +28,7 @@ accelerators = ["generic_array", "generic_array_edge"]
 mapping_path = "inputs/mapping/output_st_256.yaml"
 
 
-def cme_to_array(cme: CME_T):
+def cme_to_array_per_operand(cme: CME_T):
     # This will give the same data as in the json output dumps
     data = cme.__jsonrepr__()["outputs"]["energy"]
 
@@ -41,13 +45,13 @@ def cme_to_array(cme: CME_T):
 
 def cmes_to_array(cmes: list[CME_T]):
     assert len(cmes) == len(groups)
-    return np.array([cme_to_array(cme) for cme in cmes])
+    return np.array([cme_to_array_per_operand(cme) for cme in cmes])
 
 
 def make_plot(cmes: list[CME_T], filename: str, title: str):
     data = cmes_to_array(cmes)
 
-    _, ax = plt.subplots(figsize=(12, 8))
+    _, ax = plt.subplots(figsize=(12, 6))
     plt.rc("font", family="DejaVu Serif")
     plt.style.use("ggplot")
     bar_width = 0.6
@@ -84,13 +88,15 @@ def make_plot(cmes: list[CME_T], filename: str, title: str):
             textcoords="offset fontsize",  # Offset value is relative to fontsize
             ha="center",
             va="top",
-            weight="bold",
+            weight="normal" if i in bars_alt_idx else "bold",
             fontsize=14,
             rotation=0,
         )
 
     # Set operand names
-    xtick_labels = bars + 2 * bars_alt + 2 * bars  # 2nd and 3rd have different name
+    xtick_labels: list[str] = []
+    for idx, _ in enumerate(groups):
+        xtick_labels += bars_alt if idx in bars_alt_idx else bars
     xticks_positions = [
         indices[i] + j * (bar_width + bar_spacing) + bar_width / 2 for i in range(len(groups)) for j in range(len(bars))
     ]
