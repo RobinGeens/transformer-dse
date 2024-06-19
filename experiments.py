@@ -10,6 +10,7 @@ from zigzag.visualization.results.plot_cme import (
 
 from export_onnx import export_transformer_to_onnx
 from src.config import ALL_MODELS, BATCH_SIZE, W4A16, W8A8
+from src.util import accelerator_path, generalize_layer_name, get_cmes_full_model, get_cmes_to_plot
 
 models = ALL_MODELS
 quants = [W8A8, W4A16]
@@ -17,28 +18,6 @@ accelerators = ["generic_array"]
 batch_sizes = [BATCH_SIZE]
 
 mapping_path = "inputs/mapping/output_st_256.yaml"
-layers_to_plot = ["key_proj", "mul_qk_t", "mul_logits", "feedforward_expand", "feedforward_contract"]
-
-
-def accelerator_path(accelerator: str):
-    return f"inputs/hardware/{accelerator}.yaml"
-
-
-def generalize_layer_name(layer: str):
-    """Give the layer name a prettier format, and generalize single layers to full LLM. e.g. key projection -> all
-    linear projections"""
-    if "key_proj" in layer:
-        return "linear projection"
-    elif "mul_qk_t" in layer:
-        return "mul K*Q^T"
-    elif "mul_logits" in layer:
-        return "mul attn*V"
-    elif "feedforward_expand" in layer:
-        return "MLP layer 1"
-    elif "feedforward_contract" in layer:
-        return "MLP layer 2"
-    else:
-        return layer
 
 
 if __name__ == "__main__":
@@ -47,9 +26,9 @@ if __name__ == "__main__":
         # Overwrite batch size for the experiment
         model.batch_size = batch_size
 
-        experiment_name = f"{model.name}_{quant.name}_{accelerator}"
+        experiment_name = f"{model.parameterized_name}_{quant.name}_{accelerator}"
         dump_path = f"outputs/{experiment_name}"
-        onnx_path = f"outputs/onnx/{model.name}_{quant.name}.onnx"
+        onnx_path = f"outputs/onnx/{model.parameterized_name}_{quant.name}.onnx"
         pickle_filename = f"{dump_path}/cmes.pickle"
         print(f"--- Running {experiment_name} ---")
 
@@ -71,14 +50,14 @@ if __name__ == "__main__":
                 cmes = pickle.load(fp)
 
             # Plots for single layers
-            cmes_to_plot = [next(filter(lambda x: name in x.layer.name, cmes)) for name in layers_to_plot]
+            cmes_to_plot = get_cmes_to_plot(cmes)
             bar_plot_cost_model_evaluations_breakdown(cmes, save_path=f"{dump_path}/all_layers_single.png")
             bar_plot_cost_model_evaluations_breakdown(
                 cmes_to_plot, save_path=f"{dump_path}/interesting_layers_single.png"
             )
 
             # Compute generalized results for full LLM
-            complete_result_cmes = [cme * model.get_post_simulation_factor(cme.layer.name) for cme in cmes_to_plot]
+            complete_result_cmes = get_cmes_full_model(cmes_to_plot, model)
             bar_plot_cost_model_evaluations_breakdown(
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )

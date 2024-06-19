@@ -29,7 +29,11 @@ class LLMConfig:
 
     @property
     def name(self):
-        return f"{self.__name}_B={self.batch_size}"
+        return f"{self.__name}"
+
+    @property
+    def parameterized_name(self):
+        return f"{self.name.replace('.', '_')}_B={self.batch_size}"
 
     def to_simulatable_config(self):
         """Return a new LLMConfig instance with reduced parameters to make the simulation go faster. The results
@@ -81,7 +85,7 @@ LLAMA_1_7B = LLMConfig(
     num_head=32,
     num_layer=32,
     vocab_size=32_000,
-    name="LLAMA_1_7B",
+    name="Llama1-7B",
 )
 
 LLAMA_1_13B = LLMConfig(
@@ -92,7 +96,7 @@ LLAMA_1_13B = LLMConfig(
     num_head=40,
     num_layer=40,
     vocab_size=32_000,
-    name="LLAMA_1_13B",
+    name="Llama1-13B",
 )
 
 LLAMA_1_30B = LLMConfig(
@@ -103,7 +107,7 @@ LLAMA_1_30B = LLMConfig(
     num_head=52,
     num_layer=60,
     vocab_size=32_000,
-    name="LLAMA_1_30B",
+    name="Llama1-30B",
 )
 
 LLAMA_2_7B = LLMConfig(
@@ -114,7 +118,7 @@ LLAMA_2_7B = LLMConfig(
     num_head=32,
     num_layer=32,
     vocab_size=32_000,
-    name="LLAMA_2_7B",
+    name="Llama2-7B",
 )
 
 LLAMA_2_13B = LLMConfig(
@@ -125,7 +129,7 @@ LLAMA_2_13B = LLMConfig(
     num_head=40,
     num_layer=40,
     vocab_size=32_000,
-    name="LLAMA_2_13B",
+    name="Llama2-13B",
 )
 
 
@@ -137,7 +141,7 @@ OPT_125M = LLMConfig(
     num_head=12,
     num_layer=12,
     vocab_size=50_272,
-    name="OPT_125M",
+    name="OPT-125M",
 )
 
 
@@ -149,7 +153,7 @@ OPT_1_3B = LLMConfig(
     num_head=32,
     num_layer=24,
     vocab_size=50_272,
-    name="OPT_1_3B",
+    name="OPT-1.3B",
 )
 
 OPT_2_7B = LLMConfig(
@@ -160,7 +164,7 @@ OPT_2_7B = LLMConfig(
     num_head=32,
     num_layer=32,
     vocab_size=50_272,
-    name="OPT_2_7B",
+    name="OPT-2.7B",
 )
 
 OPT_6_7B = LLMConfig(
@@ -171,7 +175,7 @@ OPT_6_7B = LLMConfig(
     num_head=32,
     num_layer=32,
     vocab_size=50_272,
-    name="OPT_6_7B",
+    name="OPT-6.7B",
 )
 
 OPT_13B = LLMConfig(
@@ -182,7 +186,7 @@ OPT_13B = LLMConfig(
     num_head=40,
     num_layer=40,
     vocab_size=50_272,
-    name="OPT_13B",
+    name="OPT-13B",
 )
 
 OPT_30B = LLMConfig(
@@ -193,7 +197,7 @@ OPT_30B = LLMConfig(
     num_head=56,
     num_layer=48,
     vocab_size=50_272,
-    name="OPT_30B",
+    name="OPT-30B",
 )
 
 GPT3_175B = LLMConfig(
@@ -204,7 +208,7 @@ GPT3_175B = LLMConfig(
     num_head=96,
     num_layer=96,
     vocab_size=50257,
-    name="GPT3_175B",
+    name="GPT3-175B",
 )
 
 ALL_MODELS = [
