@@ -24,31 +24,36 @@ if __name__ == "__main__":
 
         output_dir = f"outputs/full_decode/{model.name}_{quant.name}_decode={decode_idx}"
         workload_path = f"outputs/full_decode/onnx/{model.name}_{quant.name}_decode={decode_idx}.onnx"
-        if not os.path.exists(workload_path):
-            export_transformer_to_onnx(model.to_simulatable_config(), quant, path=workload_path, prefill=False)
 
-        energy, latency, cmes = api.get_hardware_performance_zigzag(
-            workload=workload_path,
-            accelerator=accelerator_path,
-            mapping=mapping_path,
-            opt="energy",
-            dump_folder=output_dir,
-            pickle_filename=pickle_filename,
-            nb_spatial_mappings_generated=1,
-        )
-        print(f"Total network energy = {energy:.2e} pJ")
-        print(f"Total network latency = {latency:.2e} cycles")
+        try:
+            if not os.path.exists(workload_path):
+                export_transformer_to_onnx(model.to_simulatable_config(), quant, path=workload_path, prefill=False)
 
-        with open(pickle_filename, "rb") as fp:
-            cmes = pickle.load(fp)
+            energy, latency, cmes = api.get_hardware_performance_zigzag(
+                workload=workload_path,
+                accelerator=accelerator_path,
+                mapping=mapping_path,
+                opt="energy",
+                dump_folder=output_dir,
+                pickle_filename=pickle_filename,
+                nb_spatial_mappings_generated=1,
+            )
 
-        cmes_to_plot = get_cmes_to_plot(cmes)
+            with open(pickle_filename, "rb") as fp:
+                cmes = pickle.load(fp)
 
-        bar_plot_cost_model_evaluations_breakdown(cmes, save_path=f"{output_dir}/all_layers.png")
-        bar_plot_cost_model_evaluations_breakdown(cmes_to_plot, save_path=f"{output_dir}/interesting_layers_single.png")
+            cmes_to_plot = get_cmes_to_plot(cmes)
 
-        # Compute generalized results for full LLM
-        complete_result_cmes = get_cmes_full_model(cmes_to_plot, model)
-        bar_plot_cost_model_evaluations_breakdown(
-            complete_result_cmes, save_path=f"{output_dir}/interesting_layers_full.png"
-        )
+            bar_plot_cost_model_evaluations_breakdown(cmes, save_path=f"{output_dir}/all_layers.png")
+            bar_plot_cost_model_evaluations_breakdown(
+                cmes_to_plot, save_path=f"{output_dir}/interesting_layers_single.png"
+            )
+
+            # Compute generalized results for full LLM
+            complete_result_cmes = get_cmes_full_model(cmes_to_plot, model)
+            bar_plot_cost_model_evaluations_breakdown(
+                complete_result_cmes, save_path=f"{output_dir}/interesting_layers_full.png"
+            )
+
+        except:
+            continue
