@@ -26,6 +26,8 @@ class LLMConfig:
         self.head_size = embedding_dim // num_head
         self.vocab_size = vocab_size
         self.__name = name
+        # When simulating in decode phase: indicate which token should be generated in the sequence
+        self.token_idx = 3 * self.seq_len // 4
 
     @property
     def name(self):

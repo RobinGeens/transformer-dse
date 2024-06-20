@@ -5,16 +5,24 @@ from onnx import NodeProto
 import torch
 
 from src.transformer_model import LanguageModel
+from src.transformer_model_decode import LanguageModelDecode
 from src.config import LLAMA_1_7B, W8A8, LLMConfig, QuantConfig
 
 
 def export_transformer_to_onnx(
-    llm_config: LLMConfig, quant_config: QuantConfig, path: str = "outputs/custom_transformer.onnx"
+    llm_config: LLMConfig,
+    quant_config: QuantConfig,
+    path: str = "outputs/custom_transformer.onnx",
+    prefill: bool = True,
 ):
-    print(f"Generating ONNX model at {path}")
+    print(f"Generating ONNX model at {path} ({'prefill' if prefill else 'decode'})")
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    model = LanguageModel(llm_config)
-    dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, llm_config.seq_len))
+    if prefill:
+        model = LanguageModel(llm_config)
+        dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, llm_config.seq_len))
+    else:
+        model = LanguageModelDecode(llm_config)
+        dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, 1))  # Single token
 
     torch.onnx.export(  # type: ignore
         model,
@@ -50,4 +58,4 @@ def add_attribute_to_onnx_node(node: NodeProto, key: str, val: Any):
 if __name__ == "__main__":
     llm_config = LLAMA_1_7B.to_simulatable_config()
     quant_config = W8A8
-    export_transformer_to_onnx(llm_config, quant_config)
+    export_transformer_to_onnx(llm_config, quant_config, prefill=False)

@@ -27,7 +27,7 @@ if __name__ == "__main__":
         model.batch_size = batch_size
 
         experiment_name = f"{model.parameterized_name}_{quant.name}_{accelerator}"
-        dump_path = f"outputs/{experiment_name}"
+        dump_path = f"outputs/experiments/{experiment_name}"
         onnx_path = f"outputs/onnx/{model.parameterized_name}_{quant.name}.onnx"
         pickle_filename = f"{dump_path}/cmes.pickle"
         print(f"--- Running {experiment_name} ---")
