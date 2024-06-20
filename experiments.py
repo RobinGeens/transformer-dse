@@ -14,7 +14,7 @@ from src.util import accelerator_path, generalize_layer_name, get_cmes_full_mode
 
 models = ALL_MODELS
 quants = [W8A8, W4A16]
-accelerators = ["generic_array_edge"]  # ["generic_array", "generic_array_edge"]
+accelerators = ["generic_array", "generic_array_edge"]
 batch_sizes = [BATCH_SIZE]
 
 mapping_path = "inputs/mapping/output_st_256.yaml"
@@ -61,11 +61,11 @@ if __name__ == "__main__":
             bar_plot_cost_model_evaluations_breakdown(
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
-            result_dump_dict = {
-                generalize_layer_name(cme.layer.name): cme.__simplejsonrepr__() for cme in complete_result_cmes
-            }
-            with open(f"{dump_path}/full_model_result.json", "w") as f:
-                json.dump(result_dump_dict, f, indent=4)
+            # result_dump_dict = {
+            #     generalize_layer_name(cme.layer.name): cme.__simplejsonrepr__() for cme in complete_result_cmes
+            # }
+            # with open(f"{dump_path}/full_model_result.json", "w") as f:
+            #     json.dump(result_dump_dict, f, indent=4)
 
             # Save which layers are plotted
             with open(f"{dump_path}/info.txt", "w") as f:

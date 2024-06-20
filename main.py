@@ -7,7 +7,7 @@ from zigzag.visualization.results.plot_cme import (
 )
 from export_onnx import export_transformer_to_onnx
 from src.config import GPT3_175B, LLAMA_1_7B, OPT_125M, W16A32, W4A16, W4A8, W8A8
-from src.util import get_cmes_full_model, get_cmes_to_plot
+from src.util import clean_zigzag_plot, get_cmes_full_model, get_cmes_to_plot
 
 model = OPT_125M
 quant = W4A16
@@ -50,3 +50,6 @@ bar_plot_cost_model_evaluations_breakdown(complete_result_cmes, save_path=f"{out
 print("Layers currently shown in plot:")
 for idx, cme in enumerate(cmes_to_plot):
     print(f"\t{idx}: {cme.layer.name}")
+
+
+clean_zigzag_plot(complete_result_cmes, "temp.png")
