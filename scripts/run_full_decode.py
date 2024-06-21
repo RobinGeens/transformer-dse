@@ -5,7 +5,7 @@ from zigzag import api
 from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
-from export_onnx import export_transformer_to_onnx
+from src.export_onnx import export_transformer_to_onnx
 from src.config import GPT3_175B, LLAMA_1_7B, OPT_125M, W16A32, W4A16, W4A8, W8A8
 from src.util import get_cmes_full_model, get_cmes_to_plot
 

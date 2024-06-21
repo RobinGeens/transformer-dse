@@ -50,6 +50,7 @@ class LLMConfig:
         """The model is simulated with reduced parameters i.e. only one layer. This function returns the factor with
         which the results for the given layer have to be multiplied in order to come to the result for the full model
         Moreover, the results are normalized to a single inference instead of a full batch"""
+        assert self.num_layer > 1, "Is this method called on a `simulatable` config?"
         # K, Q, V and output projection
         if "_proj" in layer:
             return 4 * self.num_layer / self.batch_size
@@ -214,10 +215,10 @@ GPT3_175B = LLMConfig(
 )
 
 ALL_MODELS = [
-    LLAMA_1_7B,
+    # LLAMA_1_7B,
     # LLAMA_1_13B,
-    LLAMA_1_30B,
-    # LLAMA_2_7B,
+    # LLAMA_1_30B,
+    LLAMA_2_7B,
     # LLAMA_2_13B,
     OPT_125M,
     # OPT_1_3B,

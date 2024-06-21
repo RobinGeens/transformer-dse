@@ -8,7 +8,7 @@ import numpy as np
 from zigzag import api
 
 from src.config import GPT3_175B, LLAMA_1_7B, W4A16
-from export_onnx import export_transformer_to_onnx
+from src.export_onnx import export_transformer_to_onnx
 from src.util import CME_T, LAYERS_TO_PLOT, accelerator_path, get_cmes_full_model, get_cmes_to_plot
 
 # Plot info

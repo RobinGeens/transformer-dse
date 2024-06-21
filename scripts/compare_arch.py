@@ -1,5 +1,4 @@
 import itertools
-import json
 import os
 import pickle
 from zigzag import api
@@ -8,17 +7,25 @@ from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 
-from export_onnx import export_transformer_to_onnx
+from src.export_onnx import export_transformer_to_onnx
 from src.config import ALL_MODELS, BATCH_SIZE, W4A16, W8A8
-from src.util import accelerator_path, generalize_layer_name, get_cmes_full_model, get_cmes_to_plot
+from src.util import (
+    accelerator_path,
+    clean_zigzag_plot_energy,
+    clean_zigzag_plot_latency,
+    generalize_layer_name,
+    get_cmes_full_model,
+    get_cmes_to_plot,
+)
 
 models = ALL_MODELS
-quants = [W8A8, W4A16]
+quants = [W8A8]
 accelerators = ["generic_array", "generic_array_edge"]
 batch_sizes = [BATCH_SIZE]
+mapping_path = "inputs/mapping/output_unrolled_256.yaml"
+do_prefill = True
 
-mapping_path = "inputs/mapping/output_st_256.yaml"
-
+out_path = "outputs/compare_arch"
 
 if __name__ == "__main__":
     for model, accelerator, quant, batch_size in itertools.product(models, accelerators, quants, batch_sizes):
@@ -26,10 +33,13 @@ if __name__ == "__main__":
         # Overwrite batch size for the experiment
         model.batch_size = batch_size
 
-        experiment_name = f"{model.parameterized_name}_{quant.name}_{accelerator}"
-        dump_path = f"outputs/experiments/{experiment_name}"
-        onnx_path = f"outputs/onnx/{model.parameterized_name}_{quant.name}.onnx"
+        experiment_name = (
+            f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{accelerator}"
+        )
+        dump_path = f"{out_path}/{experiment_name}"
+        onnx_path = f"outputs/onnx/{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}.onnx"
         pickle_filename = f"{dump_path}/cmes.pickle"
+
         print(f"--- Running {experiment_name} ---")
 
         try:
@@ -61,13 +71,10 @@ if __name__ == "__main__":
             bar_plot_cost_model_evaluations_breakdown(
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
-            # result_dump_dict = {
-            #     generalize_layer_name(cme.layer.name): cme.__simplejsonrepr__() for cme in complete_result_cmes
-            # }
-            # with open(f"{dump_path}/full_model_result.json", "w") as f:
-            #     json.dump(result_dump_dict, f, indent=4)
 
-            # Save which layers are plotted
+            clean_zigzag_plot_energy(complete_result_cmes, f"{out_path}/{experiment_name}_energy.png")
+            clean_zigzag_plot_latency(complete_result_cmes, f"{out_path}/{experiment_name}_latency.png")
+
             with open(f"{dump_path}/info.txt", "w") as f:
                 f.write("Layers shown in plot interesting_layers_single:\n")
                 for idx, cme in enumerate(cmes_to_plot):
