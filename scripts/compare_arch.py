@@ -7,31 +7,34 @@ from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 
+from scripts.plot_anda import cmes_to_array
 from src.export_onnx import export_transformer_to_onnx
 from src.config import ALL_MODELS, BATCH_SIZE, W4A16, W8A8
 from src.util import (
+    CME_T,
     accelerator_path,
-    clean_zigzag_plot_energy,
-    clean_zigzag_plot_latency,
     generalize_layer_name,
     get_cmes_full_model,
     get_cmes_to_plot,
 )
+from src.plots import (
+    plot_energy_compare_archs,
+    plot_energy_zigzag_clean,
+    plot_energy_small,
+    plot_latency_zigzag_clean,
+)
 
 models = ALL_MODELS
-quants = [W8A8]
-accelerators = ["generic_array", "generic_array_edge"]
-batch_sizes = [BATCH_SIZE]
+quant = W8A8
+accelerators = ["generic_array_8b", "generic_array_edge_8b"]
 mapping_path = "inputs/mapping/output_unrolled_256.yaml"
 do_prefill = True
 
 out_path = "outputs/compare_arch"
 
-if __name__ == "__main__":
-    for model, accelerator, quant, batch_size in itertools.product(models, accelerators, quants, batch_sizes):
 
-        # Overwrite batch size for the experiment
-        model.batch_size = batch_size
+def run_experiment():
+    for model, accelerator in itertools.product(models, accelerators):
 
         experiment_name = (
             f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{accelerator}"
@@ -72,8 +75,8 @@ if __name__ == "__main__":
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
 
-            clean_zigzag_plot_energy(complete_result_cmes, f"{out_path}/{experiment_name}_energy.png")
-            clean_zigzag_plot_latency(complete_result_cmes, f"{out_path}/{experiment_name}_latency.png")
+            plot_energy_zigzag_clean(complete_result_cmes, f"{out_path}/{experiment_name}/energy.png")
+            plot_latency_zigzag_clean(complete_result_cmes, f"{out_path}/{experiment_name}/latency.png")
 
             with open(f"{dump_path}/info.txt", "w") as f:
                 f.write("Layers shown in plot interesting_layers_single:\n")
@@ -92,3 +95,26 @@ if __name__ == "__main__":
 
         except NoValidLoopOrderingFoundException:
             print(f"Failed {experiment_name}")
+
+
+if __name__ == "__main__":
+    # run_experiment()
+
+    # For each model: combine archs:
+    for model in models:
+
+        cmes_per_arch: list[list[CME_T]] = []
+
+        for arch in accelerators:
+            experiment_name = f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{arch}"
+            dump_path = f"{out_path}/{experiment_name}"
+            pickle_filename = f"{dump_path}/cmes.pickle"
+            with open(pickle_filename, "rb") as fp:
+                cmes: list[CME_T] = pickle.load(fp)
+
+            cmes = get_cmes_to_plot(cmes)
+            cmes_per_arch.append((cmes))
+
+        plot_energy_compare_archs(
+            cmes_per_arch[0], cmes_per_arch[1], title=model.name, filename=f"{out_path}/compare_{model.name}.png"
+        )

@@ -12,11 +12,14 @@ from src.export_onnx import export_transformer_to_onnx
 from src.config import ALL_MODELS, BATCH_SIZE, W4A16, W8A8
 from src.util import (
     accelerator_path,
-    clean_zigzag_plot_energy,
-    clean_zigzag_plot_latency,
     generalize_layer_name,
     get_cmes_full_model,
     get_cmes_to_plot,
+)
+from src.plots import (
+    plot_energy_zigzag_clean,
+    plot_energy_small,
+    plot_latency_zigzag_clean,
 )
 
 models = ALL_MODELS
@@ -72,8 +75,8 @@ if __name__ == "__main__":
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
 
-            clean_zigzag_plot_energy(complete_result_cmes, f"{dump_path}/grouped_energy.png")
-            clean_zigzag_plot_latency(complete_result_cmes, f"{dump_path}/grouped_latency.png")
+            plot_energy_zigzag_clean(complete_result_cmes, f"{dump_path}/grouped_energy.png")
+            plot_latency_zigzag_clean(complete_result_cmes, f"{dump_path}/grouped_latency.png")
 
             # result_dump_dict = {
             #     generalize_layer_name(cme.layer.name): cme.__simplejsonrepr__() for cme in complete_result_cmes
