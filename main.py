@@ -17,13 +17,13 @@ from src.plots import (
     plot_latency_zigzag_clean,
 )
 
-model = OPT_125M
+model = LLAMA_2_7B
 quant = W8A8
 do_prefill = True
 output_dir = "outputs/main"  # f"outputs/{datetime.now()}"
 # workload_path = "inputs/workload/matmul.yaml"
-accelerator_path = "inputs/hardware/generic_array_edge_8b.yaml"
-mapping_path = "inputs/mapping/output_unrolled_256.yaml"
+accelerator_path = "inputs/hardware/generic_array_8b.yaml"
+mapping_path = "inputs/mapping/weight_unrolled_256.yaml"
 
 workload_path = f"outputs/onnx/{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}.onnx"
 pickle_filename = "outputs/TPU-cmes.pickle"
@@ -37,7 +37,7 @@ energy, latency, cmes = api.get_hardware_performance_zigzag(
     workload=workload_path,
     accelerator=accelerator_path,
     mapping=mapping_path,
-    opt="energy",
+    opt="EDP",
     dump_folder=output_dir,
     pickle_filename=pickle_filename,
     nb_spatial_mappings_generated=1,

@@ -46,7 +46,7 @@ class LLMConfig:
         cfg.num_head = 1  # Keep the original `head_size`!
         return cfg
 
-    def get_post_simulation_factor(self, layer: str):
+    def get_post_simulation_multiplier(self, layer: str):
         """The model is simulated with reduced parameters i.e. only one layer. This function returns the factor with
         which the results for the given layer have to be multiplied in order to come to the result for the full model
         Moreover, the results are normalized to a single inference instead of a full batch"""
@@ -63,6 +63,11 @@ class LLMConfig:
             return self.num_layer / self.batch_size
         else:
             return 1
+
+    def get_decode_simulation_multiplier(self):
+        """To simulate the model in decode phase, only a single run (for a single) token is executed. To extrapolate the
+        results to a full decode phase inference, the results must be multiplied with the number of tokens generated"""
+        return self.seq_len // 2
 
 
 @dataclass

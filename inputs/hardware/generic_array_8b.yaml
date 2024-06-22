@@ -45,8 +45,8 @@ memories:
     w_port: 1
     rw_port: 0
     latency: 1
-    min_r_granularity: 4
-    min_w_granularity: 4
+    min_r_granularity: 8
+    min_w_granularity: 8
     operands: [I2]
     ports:
       - fh: w_port_1
@@ -82,22 +82,22 @@ memories:
     r_cost: 8192
     w_cost: 12_288
     area: 0
-    r_port: 2
-    w_port: 2
+    r_port: 3
+    w_port: 3
     rw_port: 0
     latency: 1
-    min_r_granularity: 256
-    min_w_granularity: 256
+    min_r_granularity: 512
+    min_w_granularity: 512
     operands: [I1, I2, O]
     ports:
       - fh: w_port_1
         tl: r_port_1
       - fh: w_port_2
         tl: r_port_2
-      - fh: w_port_1
-        tl: r_port_1
-        fl: w_port_1
-        th: r_port_1
+      - fh: w_port_3
+        tl: r_port_3
+        fl: w_port_3
+        th: r_port_3
     served_dimensions: [D1, D2]
 
   dram:

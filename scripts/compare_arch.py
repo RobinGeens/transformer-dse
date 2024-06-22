@@ -1,5 +1,6 @@
 import itertools
 import os
+import sys
 import pickle
 from zigzag import api
 from zigzag.opt.loma.LomaEngine import NoValidLoopOrderingFoundException
@@ -7,7 +8,8 @@ from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 
-from scripts.plot_anda import cmes_to_array
+sys.path.append(os.getcwd())
+
 from src.export_onnx import export_transformer_to_onnx
 from src.config import ALL_MODELS, BATCH_SIZE, W4A16, W8A8
 from src.util import (
@@ -18,7 +20,7 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
-    plot_energy_compare_archs,
+    plot_energy_compare,
     plot_energy_zigzag_clean,
     plot_energy_small,
     plot_latency_zigzag_clean,
@@ -28,13 +30,12 @@ models = ALL_MODELS
 quant = W8A8
 accelerators = ["generic_array_8b", "generic_array_edge_8b"]
 mapping_path = "inputs/mapping/output_unrolled_256.yaml"
-do_prefill = True
 
 out_path = "outputs/compare_arch"
 
 
 def run_experiment():
-    for model, accelerator in itertools.product(models, accelerators):
+    for model, accelerator, do_prefill in itertools.product(models, accelerators, [True, False]):
 
         experiment_name = (
             f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{accelerator}"
@@ -47,7 +48,7 @@ def run_experiment():
 
         try:
             if not os.path.exists(onnx_path):
-                export_transformer_to_onnx(model.to_simulatable_config(), quant, path=onnx_path)
+                export_transformer_to_onnx(model.to_simulatable_config(), quant, path=onnx_path, prefill=do_prefill)
 
             api.get_hardware_performance_zigzag(
                 workload=onnx_path,
@@ -70,7 +71,7 @@ def run_experiment():
             )
 
             # Compute generalized results for full LLM
-            complete_result_cmes = get_cmes_full_model(cmes_to_plot, model)
+            complete_result_cmes = get_cmes_full_model(cmes_to_plot, model, prefill=do_prefill)
             bar_plot_cost_model_evaluations_breakdown(
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
@@ -98,14 +99,14 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    # run_experiment()
+    run_experiment()
 
     # For each model: combine archs:
     for model in models:
 
         cmes_per_arch: list[list[CME_T]] = []
 
-        for arch in accelerators:
+        for arch, do_prefill in itertools.product(accelerators, [True, False]):
             experiment_name = f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{arch}"
             dump_path = f"{out_path}/{experiment_name}"
             pickle_filename = f"{dump_path}/cmes.pickle"
@@ -113,8 +114,12 @@ if __name__ == "__main__":
                 cmes: list[CME_T] = pickle.load(fp)
 
             cmes = get_cmes_to_plot(cmes)
+            cmes = get_cmes_full_model(cmes, model, prefill=do_prefill)
             cmes_per_arch.append((cmes))
 
-        plot_energy_compare_archs(
-            cmes_per_arch[0], cmes_per_arch[1], title=model.name, filename=f"{out_path}/compare_{model.name}.png"
+        plot_energy_compare(
+            cmes_per_arch,
+            groups=["Cloud prefill", "Cloud decode", "Edge prefill", "Edge decode"],
+            title=model.name,
+            filename=f"{out_path}/compare_{model.name}.png",
         )

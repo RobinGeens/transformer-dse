@@ -91,12 +91,11 @@ def plot_latency_zigzag_clean(cmes: list[CME_T], filename: str = "plot.png"):
     p.plot(data, filename)
 
 
-def plot_energy_compare_archs(cmes1: list[CME_T], cmes2: list[CME_T], title: str = "", filename: str = "plot.png"):
+def plot_energy_compare(cmes_all: list[list[CME_T]], groups: list[str], title: str = "", filename: str = "plot.png"):
     """`cmes` correspond to `LAYERS_TO_PLOT`"""
-    assert len(cmes1) == 5, "Are these the CMEs from `LAYERS_TO_PLOT`?"
-    assert len(cmes2) == 5, "Are these the CMEs from `LAYERS_TO_PLOT`?"
+    assert all([len(cmes) == 5 for cmes in cmes_all]), "Are these the CMEs from `LAYERS_TO_PLOT`?"
+    assert len(cmes_all) == len(groups)
 
-    groups = ["Cloud", "Edge"]
     bars = GROUPS
     sections = ["MAC", "RF", "SRAM", "DRAM"]
 
@@ -111,9 +110,10 @@ def plot_energy_compare_archs(cmes1: list[CME_T], cmes2: list[CME_T], title: str
         ]
         return np.array(result)
 
-    data1 = group_results_single_bar([cme_to_array_single_bar(cme) for cme in cmes1])
-    data2 = group_results_single_bar([cme_to_array_single_bar(cme) for cme in cmes2])
-    data = np.array([data1, data2])
+    def cmes_to_array_single_group(cmes: list[CME_T]) -> ARRAY_T:
+        return group_results_single_bar([cme_to_array_single_bar(cme) for cme in cmes])
+
+    data = np.array([cmes_to_array_single_group(cmes_single_group) for cmes_single_group in cmes_all])
 
     p = BarPlotter(
         groups,

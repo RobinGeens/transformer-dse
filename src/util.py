@@ -43,9 +43,12 @@ def get_cmes_to_plot(cmes: list[CME_T]):
     return result
 
 
-def get_cmes_full_model(cmes: list[CME_T], model: LLMConfig):
-    """Generalize the zigzag results (for single layers) to a full LLM"""
-    return [cme * model.get_post_simulation_factor(cme.layer.name) for cme in cmes]
+def get_cmes_full_model(cmes: list[CME_T], model: LLMConfig, prefill: bool = True):
+    """Generalize the zigzag results (for single layers) to a full LLM
+    @param prefill: whether the results are from a prefill or decode phase simulation"""
+    assert len(cmes) == 5, "These are not the `LAYERS_TO_PLOT`"
+    number_of_runs = 1 if prefill else model.get_decode_simulation_multiplier()
+    return [cme * model.get_post_simulation_multiplier(cme.layer.name) * number_of_runs for cme in cmes]
 
 
 def group_results(data: list[ARRAY_T]) -> ARRAY_T:

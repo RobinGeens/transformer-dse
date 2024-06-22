@@ -35,7 +35,7 @@ bar_plot_cost_model_evaluations_breakdown(cmes, save_path="all_layers.png")
 bar_plot_cost_model_evaluations_breakdown(cmes_to_plot, save_path="interesting_layers_single.png")
 
 # Compute generalized results for full LLM
-complete_result_cmes = [cme * model.get_post_simulation_factor(cme.layer.name) for cme in cmes_to_plot]
+complete_result_cmes = [cme * model.get_post_simulation_multiplier(cme.layer.name) for cme in cmes_to_plot]
 bar_plot_cost_model_evaluations_breakdown(complete_result_cmes, save_path="interesting_layers_full.png")
 
 print("Layers currently shown in plot:")
