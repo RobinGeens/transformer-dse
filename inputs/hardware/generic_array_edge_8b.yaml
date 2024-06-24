@@ -32,6 +32,25 @@ memories:
         tl: r_port_1
     served_dimensions: []
 
+  rf_W: # For MatMul, this will store activations
+    size: 8
+    r_bw: 8
+    w_bw: 8
+    r_cost: 0.08
+    w_cost: 0.12
+    area: 0
+    r_port: 1
+    w_port: 1
+    rw_port: 0
+    latency: 1
+    min_r_granularity: 4
+    min_w_granularity: 4
+    operands: [I2]
+    ports:
+      - fh: w_port_1
+        tl: r_port_1
+    served_dimensions: []
+
   rf_O:
     size: 16
     r_bw: 16
@@ -53,25 +72,6 @@ memories:
         th: r_port_2
     served_dimensions: []
 
-  rf_W: # For MatMul, this will store activations
-    size: 8
-    r_bw: 8
-    w_bw: 8
-    r_cost: 0.08
-    w_cost: 0.12
-    area: 0
-    r_port: 1
-    w_port: 1
-    rw_port: 0
-    latency: 1
-    min_r_granularity: 4
-    min_w_granularity: 4
-    operands: [I2]
-    ports:
-      - fh: w_port_1
-        tl: r_port_1
-    served_dimensions: []
-
   sram_2MB:
     size: 16777216
     r_bw: 2048 # 64 GB/s @ 250MHz
@@ -91,10 +91,10 @@ memories:
         tl: r_port_1
       - fh: w_port_2
         tl: r_port_2
-      - fh: w_port_1
-        tl: r_port_1
-        fl: w_port_1
-        th: r_port_1
+      - fh: w_port_3
+        tl: r_port_3
+        fl: w_port_3
+        th: r_port_3
     served_dimensions: [D1, D2]
 
   dram:
