@@ -79,8 +79,8 @@ memories:
     r_cost: 2048
     w_cost: 3072
     area: 0
-    r_port: 2
-    w_port: 2
+    r_port: 3
+    w_port: 3
     rw_port: 0
     latency: 1
     min_r_granularity: 64
