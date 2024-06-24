@@ -1,3 +1,7 @@
+"""
+Evaluate a range of models with different accelerators, quantization schemes, batch sizes, ...
+"""
+
 import itertools
 import json
 import os

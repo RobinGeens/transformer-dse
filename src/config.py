@@ -18,7 +18,7 @@ class LLMConfig:
     ):
 
         self.batch_size = batch_size
-        self.seq_len = seq_len
+        self.__seq_len = seq_len
         self.embedding_dim = embedding_dim
         self.dim_ff = dim_ff
         self.num_head = num_head
@@ -26,8 +26,14 @@ class LLMConfig:
         self.head_size = embedding_dim // num_head
         self.vocab_size = vocab_size
         self.__name = name
-        # When simulating in decode phase: indicate which token should be generated in the sequence
-        self.token_idx = 3 * self.seq_len // 4
+
+        # Simulate prefill with half of the context window.
+        self.prefill_size = self.__seq_len // 2
+        #  Approximate decode phase by simulating a single token halfway the decode sequence.
+        #  To simulate the model in decode phase, only a single run (for a single) token is executed. """
+        self.decode_idx = 3 * self.__seq_len // 4
+        # To extrapolate the results, multiply with the number of tokens generated
+        self.decode_simulation_multiplier = self.__seq_len // 2
 
     @property
     def name(self):
@@ -41,7 +47,6 @@ class LLMConfig:
         """Return a new LLMConfig instance with reduced parameters to make the simulation go faster. The results
         can then be multiplied to get the actual energy/latency values"""
         cfg = deepcopy(self)
-        cfg.seq_len = cfg.seq_len // 2  # Prefill half the context window
         cfg.num_layer = 1
         cfg.num_head = 1  # Keep the original `head_size`!
         return cfg
@@ -63,11 +68,6 @@ class LLMConfig:
             return self.num_layer / self.batch_size
         else:
             return 1
-
-    def get_decode_simulation_multiplier(self):
-        """To simulate the model in decode phase, only a single run (for a single) token is executed. To extrapolate the
-        results to a full decode phase inference, the results must be multiplied with the number of tokens generated"""
-        return self.seq_len // 2
 
 
 @dataclass
@@ -231,5 +231,11 @@ ALL_MODELS = [
     # OPT_6_7B,
     # OPT_13B,
     # OPT_30B,
+    GPT3_175B,
+]
+
+PAPER_MODELS = [
+    LLAMA_2_7B,
+    OPT_125M,
     GPT3_175B,
 ]

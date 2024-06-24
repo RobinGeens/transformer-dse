@@ -123,8 +123,8 @@ def plot_energy_compare(cmes_all: list[list[CME_T]], groups: list[str], title: s
         # bar_spacing = 0,
         group_spacing=0.5,
         # group_name_offset = 0,
-        xtick_rotation=0,
-        xtick_ha="center",
+        # xtick_rotation=0,
+        # xtick_ha="center",
         legend_cols=4,
         # group_name_dy = -1,
         ylabel="Energy (pJ)",
@@ -173,6 +173,8 @@ class BarPlotter:
         # Labels
         self.xtick_rotation = xtick_rotation
         self.xtick_ha = xtick_ha
+        # Offset from bar center
+        self.xtick_offset = self.bar_width / 2 if xtick_ha == "right" else 0
         self.ylabel = ylabel
         self.title = title
         self.legend_cols = legend_cols
@@ -215,7 +217,7 @@ class BarPlotter:
         for idx, _ in enumerate(self.groups):
             xtick_labels += self.bars
         xticks_positions = [
-            indices[i] + j * (self.bar_width + self.bar_spacing)  # + self.bar_width / 2
+            indices[i] + j * (self.bar_width + self.bar_spacing) + self.xtick_offset
             for i in range(len(self.groups))
             for j in range(len(self.bars))
         ]

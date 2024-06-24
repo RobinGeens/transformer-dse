@@ -19,7 +19,7 @@ def export_transformer_to_onnx(
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if prefill:
         model = LanguageModel(llm_config)
-        dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, llm_config.seq_len))
+        dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, llm_config.prefill_size))
     else:
         model = LanguageModelDecode(llm_config)
         dummy_input = torch.randint(low=0, high=255, size=(llm_config.batch_size, 1))  # Single token

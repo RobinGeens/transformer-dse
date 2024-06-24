@@ -31,7 +31,7 @@ class Head(nn.Module):
         self.mul_logits_v = Matmul()
 
         # in Pytorch convention a variable that's not a parameter of the model is called a buffer
-        self.register_buffer("tril", torch.tril(torch.ones(cfg.token_idx + 1, cfg.token_idx + 1)))
+        self.register_buffer("tril", torch.tril(torch.ones(cfg.decode_idx + 1, cfg.decode_idx + 1)))
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, key_token: Tensor, query_token: Tensor, value_token: Tensor):
@@ -39,12 +39,12 @@ class Head(nn.Module):
         _, L, _ = key_token.shape  # (B, 1, head_size)
 
         # This would be loaded from memory
-        key_cache = torch.ones((self.cfg.batch_size, self.cfg.token_idx, self.cfg.head_size))
+        key_cache = torch.ones((self.cfg.batch_size, self.cfg.decode_idx, self.cfg.head_size))
         full_key = torch.cat((key_cache, key_token), dim=1)  # (B, L+1, d_h)
         key_transpose = full_key.transpose(-2, -1)
 
         # This would be loaded from memory
-        value_cache = torch.ones((self.cfg.batch_size, self.cfg.token_idx, self.cfg.head_size))
+        value_cache = torch.ones((self.cfg.batch_size, self.cfg.decode_idx, self.cfg.head_size))
         full_value = torch.cat((value_cache, value_token), dim=1)
 
         # One row of the attention matrix # (B, 1, d_h) @ (B, d_h, L+1) -> (B, 1, L+1)
@@ -130,7 +130,7 @@ class Block(nn.Module):
 
 
 class LanguageModelDecode(nn.Module):
-    """Run inference in the decode stage for a single token. The token at index token_idx in the context window will
+    """Run inference in the decode stage for a single token. The token at index decode_idx in the context window will
     be generated"""
 
     def __init__(self, cfg: LLMConfig):

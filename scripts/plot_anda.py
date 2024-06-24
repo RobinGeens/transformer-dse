@@ -1,3 +1,7 @@
+"""
+Full plot for the Anda paper
+"""
+
 import os
 from itertools import product
 import pickle

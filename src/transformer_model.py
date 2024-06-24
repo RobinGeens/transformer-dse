@@ -31,7 +31,7 @@ class Head(nn.Module):
         self.mul_logits_v = Matmul()
 
         # in Pytorch convention a variable that's not a parameter of the model is called a buffer
-        self.register_buffer("tril", torch.tril(torch.ones(cfg.seq_len, cfg.seq_len)))
+        self.register_buffer("tril", torch.tril(torch.ones(cfg.prefill_size, cfg.prefill_size)))
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, key: Tensor, query: Tensor, value: Tensor):
@@ -71,13 +71,13 @@ class MultiHeadAttention(nn.Module):
 
         # (B, L, num_head_tensors, d_h)
         key: Tensor = self.key_proj(x).reshape(
-            self.cfg.batch_size, self.cfg.seq_len, num_head_tensors, self.cfg.head_size
+            self.cfg.batch_size, self.cfg.prefill_size, num_head_tensors, self.cfg.head_size
         )
         query: Tensor = self.query_proj(x).reshape(
-            self.cfg.batch_size, self.cfg.seq_len, num_head_tensors, self.cfg.head_size
+            self.cfg.batch_size, self.cfg.prefill_size, num_head_tensors, self.cfg.head_size
         )
         value: Tensor = self.value_proj(x).reshape(
-            self.cfg.batch_size, self.cfg.seq_len, num_head_tensors, self.cfg.head_size
+            self.cfg.batch_size, self.cfg.prefill_size, num_head_tensors, self.cfg.head_size
         )
 
         out = torch.cat(
@@ -131,7 +131,7 @@ class LanguageModel(nn.Module):
         super().__init__()  # type: ignore
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(cfg.vocab_size, cfg.embedding_dim)
-        self.position_embedding_table = nn.Embedding(cfg.seq_len, cfg.embedding_dim)
+        self.position_embedding_table = nn.Embedding(cfg.prefill_size, cfg.embedding_dim)
         self.blocks = nn.Sequential(*[Block(cfg) for _ in range(cfg.num_layer)])
         self.layer_norm_final = nn.LayerNorm(cfg.embedding_dim)
         self.de_embed = nn.Linear(cfg.embedding_dim, cfg.vocab_size)
