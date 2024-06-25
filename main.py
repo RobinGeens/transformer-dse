@@ -12,9 +12,9 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
-    plot_energy_zigzag_clean,
-    plot_energy_small,
-    plot_latency_zigzag_clean,
+    plot_energy_clean,
+    plot_energy_minimal,
+    plot_latency_clean,
 )
 
 model = LLAMA_2_7B
@@ -55,8 +55,8 @@ bar_plot_cost_model_evaluations_breakdown(cmes_to_plot, save_path=f"{output_dir}
 # Compute generalized results for full LLM
 complete_result_cmes = get_cmes_full_model(cmes_to_plot, model)
 bar_plot_cost_model_evaluations_breakdown(complete_result_cmes, save_path=f"{output_dir}/interesting_layers_full.png")
-plot_energy_small(complete_result_cmes, f"{output_dir}/grouped_energy.png")
-plot_latency_zigzag_clean(complete_result_cmes, f"{output_dir}/grouped_latency.png")
+plot_energy_minimal(complete_result_cmes, f"{output_dir}/grouped_energy.png")
+plot_latency_clean(complete_result_cmes, f"{output_dir}/grouped_latency.png")
 
 print("Layers currently shown in plot:")
 for idx, cme in enumerate(cmes_to_plot):

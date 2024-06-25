@@ -23,10 +23,10 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
-    plot_energy_compare,
-    plot_energy_zigzag_clean,
-    plot_energy_small,
-    plot_latency_zigzag_clean,
+    plot_energy_compare_minimal,
+    plot_energy_clean,
+    plot_energy_minimal,
+    plot_latency_clean,
 )
 
 models = ALL_MODELS
@@ -79,8 +79,8 @@ def run_experiment():
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
 
-            plot_energy_zigzag_clean(complete_result_cmes, f"{out_path}/{experiment_name}/energy.png")
-            plot_latency_zigzag_clean(complete_result_cmes, f"{out_path}/{experiment_name}/latency.png")
+            plot_energy_clean(complete_result_cmes, f"{out_path}/{experiment_name}/energy.png")
+            plot_latency_clean(complete_result_cmes, f"{out_path}/{experiment_name}/latency.png")
 
             with open(f"{dump_path}/info.txt", "w") as f:
                 f.write("Layers shown in plot interesting_layers_single:\n")
@@ -120,7 +120,7 @@ if __name__ == "__main__":
             cmes = get_cmes_full_model(cmes, model, prefill=do_prefill)
             cmes_per_arch.append((cmes))
 
-        plot_energy_compare(
+        plot_energy_compare_minimal(
             cmes_per_arch,
             groups=["Cloud prefill", "Cloud decode", "Edge prefill", "Edge decode"],
             title=model.name,

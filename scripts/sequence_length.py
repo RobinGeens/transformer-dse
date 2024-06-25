@@ -24,10 +24,10 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
-    plot_energy_compare,
-    plot_energy_zigzag_clean,
-    plot_energy_small,
-    plot_latency_zigzag_clean,
+    plot_energy_compare_minimal,
+    plot_energy_clean,
+    plot_energy_minimal,
+    plot_latency_clean,
 )
 
 quant = W8A8
@@ -96,15 +96,15 @@ def run_experiment():
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
 
-            plot_energy_zigzag_clean(complete_result_cmes, f"{out_path}/{experiment_name}/energy.png")
-            plot_latency_zigzag_clean(complete_result_cmes, f"{out_path}/{experiment_name}/latency.png")
+            plot_energy_clean(complete_result_cmes, f"{out_path}/{experiment_name}/energy.png")
+            plot_latency_clean(complete_result_cmes, f"{out_path}/{experiment_name}/latency.png")
 
         except NoValidLoopOrderingFoundException:
             print(f"Failed {experiment_name}")
 
 
 if __name__ == "__main__":
-    run_experiment()
+    # run_experiment()
 
     # For each model: combine archs:
     for model_sim in simulation_models:
@@ -124,10 +124,11 @@ if __name__ == "__main__":
                 cmes: list[CME_T] = pickle.load(fp)
 
             cmes = get_cmes_to_plot(cmes)
-            cmes = get_cmes_full_model(cmes, model_sim, prefill=do_prefill)
+            original_config = next(filter(lambda x: x.name == model_sim.name, PAPER_MODELS))
+            cmes = get_cmes_full_model(cmes, original_config, prefill=do_prefill)
             cmes_per_arch.append((cmes))
 
-        plot_energy_compare(
+        plot_energy_compare_minimal(
             cmes_per_arch,
             groups=["Cloud prefill", "Cloud decode", "Edge prefill", "Edge decode"],
             title=model_sim.name,

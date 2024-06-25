@@ -45,8 +45,8 @@ memories:
     w_port: 1
     rw_port: 0
     latency: 1
-    min_r_granularity: 8
-    min_w_granularity: 8
+    min_r_granularity: 1
+    min_w_granularity: 1
     operands: [I2]
     ports:
       - fh: w_port_1

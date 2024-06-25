@@ -21,9 +21,9 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
-    plot_energy_zigzag_clean,
-    plot_energy_small,
-    plot_latency_zigzag_clean,
+    plot_energy_clean,
+    plot_energy_minimal,
+    plot_latency_clean,
 )
 
 models = ALL_MODELS
@@ -79,8 +79,8 @@ if __name__ == "__main__":
                 complete_result_cmes, save_path=f"{dump_path}/interesting_layers_full.png"
             )
 
-            plot_energy_zigzag_clean(complete_result_cmes, f"{dump_path}/grouped_energy.png")
-            plot_latency_zigzag_clean(complete_result_cmes, f"{dump_path}/grouped_latency.png")
+            plot_energy_clean(complete_result_cmes, f"{dump_path}/grouped_energy.png")
+            plot_latency_clean(complete_result_cmes, f"{dump_path}/grouped_latency.png")
 
             # result_dump_dict = {
             #     generalize_layer_name(cme.layer.name): cme.__simplejsonrepr__() for cme in complete_result_cmes

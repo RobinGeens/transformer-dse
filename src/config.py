@@ -80,8 +80,9 @@ class QuantConfig:
         return f"W{self.weight_bits}A{self.act_bits}"
 
 
-W8A8 = QuantConfig(8, 8)
+W1A8 = QuantConfig(1, 8)
 W4A8 = QuantConfig(4, 8)
+W8A8 = QuantConfig(8, 8)
 W4A16 = QuantConfig(4, 16)
 W16A32 = QuantConfig(16, 32)
 
