@@ -7,14 +7,13 @@ import os
 import sys
 import pickle
 from zigzag import api
-from zigzag.opt.loma.LomaEngine import NoValidLoopOrderingFoundException
 from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 
 sys.path.append(os.getcwd())
 from src.export_onnx import export_transformer_to_onnx
-from src.config import ALL_MODELS, BATCH_SIZE, LLAMA_2_7B, W1A8, W4A16, W4A8, W8A8
+from src.config import ALL_MODELS, BATCH_SIZE, LLAMA_2_7B, W1A32, W1A8, W32A32, W4A16, W4A8, W8A8
 from src.util import (
     CME_T,
     accelerator_path,
@@ -33,8 +32,8 @@ from src.plots import (
 )
 
 model = LLAMA_2_7B
-quants = [W1A8, W4A8, W8A8]
-accelerator = "generic_array_8b"
+quants = [W1A32, W4A16, W32A32]
+accelerator = "generic_array_32b"
 mapping_path = "inputs/mapping/weight_unrolled_256.yaml"
 out_path = "outputs/exp_quant"
 
@@ -83,7 +82,7 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    # run_experiment()
+    run_experiment()
 
     for quant in quants:
         cmes_per_group: list[list[CME_T]] = []
@@ -101,21 +100,21 @@ if __name__ == "__main__":
             cmes = get_cmes_full_model(cmes, model, prefill=do_prefill)
             cmes_per_group.append((cmes))
 
-        plot_energy_compare(
-            cmes_per_group,
-            supergroups=["Prefill", "Decode"],
-            title=quant.name,
-            filename=f"{out_path}/energy_{quant.name}_{model.name}.png",
-        )
-        plot_latency_compare(
-            cmes_per_group,
-            supergroups=["Prefill", "Decode"],
-            title=quant.name,
-            filename=f"{out_path}/latency_{quant.name}_{model.name}.png",
-        )
+        # plot_energy_compare(
+        #     cmes_per_group,
+        #     supergroups=["Prefill", "Decode"],
+        #     title=quant.name,
+        #     filename=f"{out_path}/energy_{quant.name}_{model.name}.png",
+        # )
+        # plot_latency_compare(
+        #     cmes_per_group,
+        #     supergroups=["Prefill", "Decode"],
+        #     title=quant.name,
+        #     filename=f"{out_path}/latency_{quant.name}_{model.name}.png",
+        # )
         plot_energy_and_latency(
             cmes_per_group,
             supergroups=["Prefill", "Decode"],
-            title=quant.name,
+            title=f"{model.name} ({quant.name})",
             filename=f"{out_path}/energy_and_latency_{quant.name}_{model.name}.png",
         )

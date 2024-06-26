@@ -70,21 +70,24 @@ class LLMConfig:
             return 1
 
 
-@dataclass
 class QuantConfig:
-    weight_bits: int
-    act_bits: int
+    def __init__(self, weight_bits: int, act_bits: int, output_bits: int | None = None):
+        self.weight_bits = weight_bits
+        self.act_bits = act_bits
+        self.intermediate_output_bits = output_bits if output_bits is not None else 2 * act_bits
 
     @property
     def name(self):
         return f"W{self.weight_bits}A{self.act_bits}"
 
 
-W1A8 = QuantConfig(1, 8)
-W4A8 = QuantConfig(4, 8)
-W8A8 = QuantConfig(8, 8)
-W4A16 = QuantConfig(4, 16)
-W16A32 = QuantConfig(16, 32)
+W1A8 = QuantConfig(1, 8, 16)
+W4A8 = QuantConfig(4, 8, 16)
+W8A8 = QuantConfig(8, 8, 16)
+W4A16 = QuantConfig(4, 16, 32)
+W1A32 = QuantConfig(1, 32, 32)
+W16A32 = QuantConfig(16, 32, 32)
+W32A32 = QuantConfig(32, 32, 32)
 
 LLAMA_1_7B = LLMConfig(
     batch_size=BATCH_SIZE,

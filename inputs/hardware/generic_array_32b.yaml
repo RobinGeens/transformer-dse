@@ -16,30 +16,30 @@ name: generic_array
 
 memories:
   rf_I:
-    size: 16
-    r_bw: 16
-    w_bw: 16
-    r_cost: 0.16
-    w_cost: 0.24
+    size: 32
+    r_bw: 32
+    w_bw: 32
+    r_cost: 0.32
+    w_cost: 0.48
     area: 0
     r_port: 1
     w_port: 1
     rw_port: 0
     latency: 1
-    min_r_granularity: 1
-    min_w_granularity: 1
+    min_r_granularity: 8
+    min_w_granularity: 8
     operands: [I1]
     ports:
       - fh: w_port_1
         tl: r_port_1
-    served_dimensions: [D3]
+    served_dimensions: []
 
   rf_W: # For MatMul, this will store activations
-    size: 16
-    r_bw: 16
-    w_bw: 16
-    r_cost: 0.16
-    w_cost: 0.24
+    size: 32
+    r_bw: 32
+    w_bw: 32
+    r_cost: 0.32
+    w_cost: 0.48
     area: 0
     r_port: 1
     w_port: 1
@@ -51,7 +51,7 @@ memories:
     ports:
       - fh: w_port_1
         tl: r_port_1
-    served_dimensions: [D3]
+    served_dimensions: []
 
   rf_O:
     size: 32
@@ -64,15 +64,15 @@ memories:
     w_port: 2
     rw_port: 0
     latency: 1
-    min_r_granularity: 1
-    min_w_granularity: 1
+    min_r_granularity: 16
+    min_w_granularity: 16
     operands: [O]
     ports:
       - fh: w_port_1
         tl: r_port_1
         fl: w_port_2
         th: r_port_2
-    served_dimensions: [D3]
+    served_dimensions: []
 
   sram_32MB:
     # From FLAT paper: 8 Tbit/s on-chip BW
@@ -98,11 +98,11 @@ memories:
         tl: r_port_1
         fl: w_port_1
         th: r_port_1
-    served_dimensions: [D1, D2, D3]
+    served_dimensions: [D1, D2]
 
   dram:
     # From FLAT paper: 400 GB/s off-chip BW
-    size: 10000000000000000
+    size: 10_000_000_000_000_000
     r_bw: 2048
     w_bw: 2048
     r_cost: 20_480
@@ -124,11 +124,11 @@ memories:
         tl: rw_port_1
         fl: rw_port_1
         th: rw_port_1
-    served_dimensions: [D1, D2, D3]
+    served_dimensions: [D1, D2]
 
 operational_array:
   input_precision: [16, 16]
-  multiplier_energy: 0.01
+  multiplier_energy: 0.16
   multiplier_area: 1 # unit
-  dimensions: [D1, D2, D3]
-  sizes: [256, 256, 16]
+  dimensions: [D1, D2]
+  sizes: [256, 256]

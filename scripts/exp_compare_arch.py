@@ -32,8 +32,8 @@ from src.plots import (
 )
 
 models = [LLAMA_2_7B]
-quant = W4A8
-accelerators = ["generic_array_8b", "generic_array_edge_8b"]
+quant = W4A16
+accelerators = ["generic_array_32b", "generic_array_edge_32b"]
 mapping_path = "inputs/mapping/weight_unrolled_256.yaml"
 out_path = "outputs/exp_compare_arch"
 
@@ -82,7 +82,7 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    # run_experiment()
+    run_experiment()
 
     # For each model: combine archs:
     for model in models:
@@ -102,21 +102,21 @@ if __name__ == "__main__":
 
         groups = ["Cloud\nprefill", "Cloud\ndecode", "Edge\nprefill", "Edge\ndecode"]
 
-        plot_energy_compare_minimal(
-            cmes_per_arch,
-            groups=groups,
-            title=model.name,
-            filename=f"{out_path}/compare_energy_{model.name}.png",
-        )
-        plot_latency_compare_minimal(
-            cmes_per_arch,
-            groups=groups,
-            title=model.name,
-            filename=f"{out_path}/compare_latency_{model.name}.png",
-        )
+        # plot_energy_compare_minimal(
+        #     cmes_per_arch,
+        #     groups=groups,
+        #     title=model.name,
+        #     filename=f"{out_path}/compare_energy_{model.name}.png",
+        # )
+        # plot_latency_compare_minimal(
+        #     cmes_per_arch,
+        #     groups=groups,
+        #     title=model.name,
+        #     filename=f"{out_path}/compare_latency_{model.name}.png",
+        # )
         plot_energy_and_latency_minimal(
             cmes_per_arch,
             groups=groups,
-            title=model.name,
+            title=f"{model.name} ({quant.name})",
             filename=f"{out_path}/compare_energy_and_latency_{model.name}.png",
         )
