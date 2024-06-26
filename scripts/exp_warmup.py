@@ -23,6 +23,7 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
+    plot_energy_and_latency,
     plot_energy_compare,
     plot_energy_compare_minimal,
     plot_energy_clean,
@@ -82,7 +83,7 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    run_experiment()
+    # run_experiment()
 
     cmes_per_group: list[list[CME_T]] = []
 
@@ -110,4 +111,10 @@ if __name__ == "__main__":
         supergroups=["Prefill", "Decode"],
         title=model.name,
         filename=f"{out_path}/latency_{model.name}.png",
+    )
+    plot_energy_and_latency(
+        cmes_per_group,
+        supergroups=["Prefill", "Decode"],
+        title=model.name,
+        filename=f"{out_path}/energy_and_latency_{model.name}.png",
     )

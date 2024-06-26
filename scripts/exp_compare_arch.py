@@ -1,5 +1,5 @@
 """
-Make a single plot for 1 model on 1 architecture
+Make plots to compare different architectures on the same models
 """
 
 import itertools
@@ -7,14 +7,13 @@ import os
 import sys
 import pickle
 from zigzag import api
-from zigzag.opt.loma.LomaEngine import NoValidLoopOrderingFoundException
 from zigzag.visualization.results.plot_cme import (
     bar_plot_cost_model_evaluations_breakdown,
 )
 
 sys.path.append(os.getcwd())
 from src.export_onnx import export_transformer_to_onnx
-from src.config import ALL_MODELS, BATCH_SIZE, LLAMA_2_7B, W1A8, W4A16, W4A8, W8A8
+from src.config import ALL_MODELS, BATCH_SIZE, LLAMA_2_7B, W4A16, W4A8, W8A8
 from src.util import (
     CME_T,
     accelerator_path,
@@ -23,24 +22,24 @@ from src.util import (
     get_cmes_to_plot,
 )
 from src.plots import (
-    plot_energy_and_latency,
-    plot_energy_compare,
+    plot_energy_and_latency_minimal,
     plot_energy_compare_minimal,
     plot_energy_clean,
     plot_energy_minimal,
     plot_latency_clean,
     plot_latency_compare,
+    plot_latency_compare_minimal,
 )
 
-model = LLAMA_2_7B
-quants = [W1A8, W4A8, W8A8]
-accelerator = "generic_array_8b"
+models = [LLAMA_2_7B]
+quant = W4A8
+accelerators = ["generic_array_8b", "generic_array_edge_8b"]
 mapping_path = "inputs/mapping/weight_unrolled_256.yaml"
-out_path = "outputs/exp_quant"
+out_path = "outputs/exp_compare_arch"
 
 
 def run_experiment():
-    for quant, do_prefill in itertools.product(quants, [True, False]):
+    for model, accelerator, do_prefill in itertools.product(models, accelerators, [True, False]):
 
         experiment_name = (
             f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{accelerator}"
@@ -85,13 +84,13 @@ def run_experiment():
 if __name__ == "__main__":
     # run_experiment()
 
-    for quant in quants:
-        cmes_per_group: list[list[CME_T]] = []
+    # For each model: combine archs:
+    for model in models:
 
-        for do_prefill in [True, False]:
-            experiment_name = (
-                f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{accelerator}"
-            )
+        cmes_per_arch: list[list[CME_T]] = []
+
+        for arch, do_prefill in itertools.product(accelerators, [True, False]):
+            experiment_name = f"{model.parameterized_name}_{quant.name}_{'prefill' if do_prefill else 'decode'}_{arch}"
             dump_path = f"{out_path}/{experiment_name}"
             pickle_filename = f"{dump_path}/cmes.pickle"
             with open(pickle_filename, "rb") as fp:
@@ -99,23 +98,25 @@ if __name__ == "__main__":
 
             cmes = get_cmes_to_plot(cmes)
             cmes = get_cmes_full_model(cmes, model, prefill=do_prefill)
-            cmes_per_group.append((cmes))
+            cmes_per_arch.append((cmes))
 
-        plot_energy_compare(
-            cmes_per_group,
-            supergroups=["Prefill", "Decode"],
-            title=quant.name,
-            filename=f"{out_path}/energy_{quant.name}_{model.name}.png",
+        groups = ["Cloud\nprefill", "Cloud\ndecode", "Edge\nprefill", "Edge\ndecode"]
+
+        plot_energy_compare_minimal(
+            cmes_per_arch,
+            groups=groups,
+            title=model.name,
+            filename=f"{out_path}/compare_energy_{model.name}.png",
         )
-        plot_latency_compare(
-            cmes_per_group,
-            supergroups=["Prefill", "Decode"],
-            title=quant.name,
-            filename=f"{out_path}/latency_{quant.name}_{model.name}.png",
+        plot_latency_compare_minimal(
+            cmes_per_arch,
+            groups=groups,
+            title=model.name,
+            filename=f"{out_path}/compare_latency_{model.name}.png",
         )
-        plot_energy_and_latency(
-            cmes_per_group,
-            supergroups=["Prefill", "Decode"],
-            title=quant.name,
-            filename=f"{out_path}/energy_and_latency_{quant.name}_{model.name}.png",
+        plot_energy_and_latency_minimal(
+            cmes_per_arch,
+            groups=groups,
+            title=model.name,
+            filename=f"{out_path}/compare_energy_and_latency_{model.name}.png",
         )
