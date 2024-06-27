@@ -17,8 +17,8 @@ memories:
     size: 32
     r_bw: 32
     w_bw: 32
-    r_cost: 0.32
-    w_cost: 0.48
+    r_cost: 0.8
+    w_cost: 0.8
     area: 0
     r_port: 1
     w_port: 1
@@ -36,8 +36,8 @@ memories:
     size: 32
     r_bw: 32
     w_bw: 32
-    r_cost: 0.32
-    w_cost: 0.48
+    r_cost: 0.8
+    w_cost: 0.8
     area: 0
     r_port: 1
     w_port: 1
@@ -55,8 +55,8 @@ memories:
     size: 32
     r_bw: 32
     w_bw: 32
-    r_cost: 0.32
-    w_cost: 0.48
+    r_cost: 0.8
+    w_cost: 0.8
     area: 0
     r_port: 2
     w_port: 2
@@ -77,7 +77,7 @@ memories:
     r_bw: 2048 # 64 GB/s @ 250MHz
     w_bw: 2048
     r_cost: 2048
-    w_cost: 3072
+    w_cost: 2048
     area: 0
     r_port: 3
     w_port: 3
@@ -101,8 +101,8 @@ memories:
     size: 10000000000000000
     r_bw: 256 # 8 GB/s @ 250 MHz
     w_bw: 256
-    r_cost: 2560
-    w_cost: 3840
+    r_cost: 6400
+    w_cost: 6400
     area: 0
     r_port: 0
     w_port: 0
@@ -124,7 +124,7 @@ memories:
 
 operational_array:
   input_precision: [8, 8]
-  multiplier_energy: 0.16 # pJ
+  multiplier_energy: 1.5 # pJ
   multiplier_area: 1 # unit
   dimensions: [D1, D2]
   sizes: [32, 32]

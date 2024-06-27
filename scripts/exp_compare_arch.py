@@ -82,7 +82,7 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    run_experiment()
+    # run_experiment()
 
     # For each model: combine archs:
     for model in models:
@@ -102,18 +102,6 @@ if __name__ == "__main__":
 
         groups = ["Cloud\nprefill", "Cloud\ndecode", "Edge\nprefill", "Edge\ndecode"]
 
-        # plot_energy_compare_minimal(
-        #     cmes_per_arch,
-        #     groups=groups,
-        #     title=model.name,
-        #     filename=f"{out_path}/compare_energy_{model.name}.png",
-        # )
-        # plot_latency_compare_minimal(
-        #     cmes_per_arch,
-        #     groups=groups,
-        #     title=model.name,
-        #     filename=f"{out_path}/compare_latency_{model.name}.png",
-        # )
         plot_energy_and_latency_minimal(
             cmes_per_arch,
             groups=groups,

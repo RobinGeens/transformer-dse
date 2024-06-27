@@ -1,8 +1,10 @@
 import itertools
+from time import sleep
 from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn
+from sympy import true
 
 from src.util import ARRAY_T, CME_T, GROUPS, LAYERS_TO_PLOT
 
@@ -133,8 +135,6 @@ class BarPlotter:
         bars: list[str],
         sections: list[str],
         *,
-        # sections_alt: list[str] | None = None,
-        # sections_alt_idx: list[int] | None = None,
         # Layout
         bar_width: float = 0.6,
         bar_spacing: float = 0.1,
@@ -153,14 +153,10 @@ class BarPlotter:
         # Other
         colors: None = None,
     ):
-        # assert sections_alt is None or len(sections_alt) == len(sections)
         assert xtick_labels is None or len(xtick_labels) == len(groups) * len(bars)
         self.groups = groups
         self.bars = bars
         self.sections = sections
-        # self.sections_alt = sections_alt
-        # self.sections_alt_idx = sections_alt_idx
-
         # Layout
         self.bar_width = bar_width
         self.bar_spacing = bar_spacing
@@ -246,6 +242,29 @@ class BarPlotter:
         ax.set_title(self.title, fontsize=16)
         ax.legend(ncol=self.legend_cols, fontsize=14)  # loc="upper center"
 
+    def construct_subplot_broken_axis(self, ax: Any, data: ARRAY_T):
+        assert data.shape == (len(self.groups), len(self.bars), len(self.sections))
+
+        indices = np.arange(len(self.groups)) * (
+            len(self.bars) * (self.bar_width + self.bar_spacing) + self.group_spacing
+        )
+
+        # Make bars
+        for i, _ in enumerate(self.bars):
+            bottom = np.zeros(len(self.groups))
+            for j, _ in enumerate(self.sections):
+                positions = indices + i * (self.bar_width + self.bar_spacing)
+                heights = data[:, i, j]
+                ax.bar(
+                    positions,
+                    heights,
+                    self.bar_width,
+                    bottom=bottom,
+                    color=self.colors[j],
+                    edgecolor="black",
+                )
+                bottom += heights
+
     def plot(self, data: ARRAY_T, filename: str) -> None:
 
         _, ax = plt.subplots(figsize=(12, 6))
@@ -253,7 +272,6 @@ class BarPlotter:
         plt.rc("font", family="DejaVu Serif")
         plt.style.use("ggplot")
 
-        # plt.xticks(rotation=self.xtick_rotation)
         plt.yscale(self.scale)
 
         plt.tight_layout()
@@ -279,6 +297,45 @@ class BarPlotterSubfigures:
         self.width_ratios = width_ratios if width_ratios is not None else subplot_cols * [1]
         self.title = title
 
+    def plot_broken_axes(self, data: list[ARRAY_T], filename: str) -> None:
+        assert len(data) == self.nb_plots
+
+        fig, axes = plt.subplots(
+            nrows=2 * self.subplot_rows,
+            ncols=self.subplot_cols,
+            width_ratios=self.width_ratios,
+            figsize=(12, 6),
+            sharex=true,
+        )
+        fig.subplots_adjust(hspace=0.001)
+
+        for idx in range(self.nb_plots):
+            ax1 = axes[0][idx]
+            ax2 = axes[1][idx]
+
+            # ax1.set_ylim(10**13, 2 * 10**13)
+            # ax2.set_ylim(0, 10**12)
+            ax1.spines.bottom.set_visible(False)
+            ax2.spines.top.set_visible(False)
+            ax1.tick_params(labeltop=False)
+
+            d = 0.5  # proportion of vertical to horizontal extent of the slanted line
+            kwargs = dict(
+                marker=[(-1, -d), (1, d)], markersize=12, linestyle="none", color="k", mec="k", mew=1, clip_on=False
+            )
+            ax1.plot([0, 1], [0, 0], transform=ax1.transAxes, **kwargs)
+            ax2.plot([0, 1], [1, 1], transform=ax2.transAxes, **kwargs)
+
+            self.bar_plotters[idx].construct_subplot(ax2, data[idx])
+            self.bar_plotters[idx].construct_subplot_broken_axis(ax1, data[idx])
+
+        fig.suptitle(self.title)
+        # plt.rc("font", family="DejaVu Serif")
+        # plt.style.use("ggplot")
+        plt.tight_layout()
+        sleep(0.2)
+        plt.savefig(filename, transparent=False)
+
     def plot(self, data: list[ARRAY_T], filename: str) -> None:
         assert len(data) == self.nb_plots
 
@@ -293,4 +350,5 @@ class BarPlotterSubfigures:
         plt.rc("font", family="DejaVu Serif")
         plt.style.use("ggplot")
         plt.tight_layout()
+        sleep(0.2)
         plt.savefig(filename, transparent=False)

@@ -82,7 +82,7 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    run_experiment()
+    # run_experiment()
 
     for quant in quants:
         cmes_per_group: list[list[CME_T]] = []
@@ -100,18 +100,6 @@ if __name__ == "__main__":
             cmes = get_cmes_full_model(cmes, model, prefill=do_prefill)
             cmes_per_group.append((cmes))
 
-        # plot_energy_compare(
-        #     cmes_per_group,
-        #     supergroups=["Prefill", "Decode"],
-        #     title=quant.name,
-        #     filename=f"{out_path}/energy_{quant.name}_{model.name}.png",
-        # )
-        # plot_latency_compare(
-        #     cmes_per_group,
-        #     supergroups=["Prefill", "Decode"],
-        #     title=quant.name,
-        #     filename=f"{out_path}/latency_{quant.name}_{model.name}.png",
-        # )
         plot_energy_and_latency(
             cmes_per_group,
             supergroups=["Prefill", "Decode"],
