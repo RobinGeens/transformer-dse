@@ -56,7 +56,7 @@ class PlotCMEDetailed:
     energy_sections = ["MAC", "weight", "act", "act2", "output"]
     non_weight_layers = [1, 2]  # Indices in `LAYERS_TO_PLOT`
 
-    latency_sections = ["Ideal computation", "Spatial underutilization", "Memory stall"]
+    latency_sections = ["Ideal computation", "Spatial stall", "Memory stall"]
 
     @staticmethod
     def get_mem_energy(data: Any, op: str, mem_level: int):
@@ -135,6 +135,7 @@ class BarPlotter:
         bars: list[str],
         sections: list[str],
         *,
+        supergroups: list[str] | None = None,
         # Layout
         bar_width: float = 0.6,
         bar_spacing: float = 0.1,
@@ -142,7 +143,10 @@ class BarPlotter:
         group_name_dy: float = -4,
         group_name_offset: float | None = None,
         scale: str = "linear",
+        ylim: float | None = None,
         # Labels
+        group_name_fontsize: int = 14,
+        group_name_color: str = "black",
         xtick_labels: list[str] | None = None,
         xtick_rotation: int = 45,
         xtick_fontsize: int = 14,
@@ -157,6 +161,7 @@ class BarPlotter:
         self.groups = groups
         self.bars = bars
         self.sections = sections
+        self.supergroups = supergroups
         # Layout
         self.bar_width = bar_width
         self.bar_spacing = bar_spacing
@@ -168,8 +173,11 @@ class BarPlotter:
             else group_name_offset
         )
         self.scale = scale
+        self.ylim = ylim
 
         # Labels
+        self.group_name_fontsize = group_name_fontsize
+        self.group_name_color = group_name_color
         self.xtick_labels = xtick_labels if xtick_labels is not None else len(groups) * bars
         self.xtick_rotation = xtick_rotation
         self.xtick_fontsize = xtick_fontsize
@@ -184,6 +192,8 @@ class BarPlotter:
         colors_default = seaborn.color_palette("pastel", len(self.sections))
         colors_default = colors_default[2:] + colors_default[:2]  # Because green is at idx 2
         self.colors = colors_default if colors is None else colors
+        # Use this setting to saturate the bars and print their actual value on top
+        self.nb_saturated_bars = 0
 
     def construct_subplot(self, ax: Any, data: ARRAY_T):
         assert data.shape == (len(self.groups), len(self.bars), len(self.sections))
@@ -193,11 +203,16 @@ class BarPlotter:
         )
         group_name_positions = indices + self.group_name_offset
 
+        # Saturate data
+        if self.nb_saturated_bars > 0:
+            data, labels_on_top = self.saturate_data(data, nb_saturated_bars=self.nb_saturated_bars)
+
         # Make bars
         for i, _ in enumerate(self.bars):
             bottom = np.zeros(len(self.groups))
+            positions = indices + i * (self.bar_width + self.bar_spacing)
+
             for j, section in enumerate(self.sections):
-                positions = indices + i * (self.bar_width + self.bar_spacing)
                 heights = data[:, i, j]
                 ax.bar(
                     positions,
@@ -209,6 +224,22 @@ class BarPlotter:
                     edgecolor="black",
                 )
                 bottom += heights
+
+        # Labels on top of saturated bars
+        if self.nb_saturated_bars > 0:
+            saturated_value = data.max()
+            for i in range(len(self.groups)):
+                for j in range(len(self.bars)):
+                    label = labels_on_top[i][j]
+                    if label != 0:
+                        ax.text(
+                            indices[i] + j * (self.bar_width + self.bar_spacing),
+                            saturated_value,
+                            f"{label:.1e}",
+                            bbox=dict(facecolor="black"),
+                            color="white",
+                            ha="center",
+                        )
 
         # Bar names (as xticks)
         xticks_positions = [
@@ -232,15 +263,38 @@ class BarPlotter:
                 ha="center",
                 va="top",
                 weight="normal",
-                fontsize=14,
+                fontsize=self.group_name_fontsize,
                 rotation=0,
+                color=self.group_name_color,
             )
+
+        if self.supergroups is not None:
+            groups_per_supergroup = len(self.groups) // len(self.supergroups)
+            # e.g. 3 groups in each supergroup -> put supergroup name under group name at idx=1 within the supergroup
+            supergroup_idx_within_group = groups_per_supergroup // len(self.supergroups)
+            # Supergroup names
+            for i, supergroup in enumerate(self.supergroups):
+                x_coordiante = group_name_positions[i * groups_per_supergroup + supergroup_idx_within_group]
+                ax.annotate(
+                    supergroup,
+                    xy=(x_coordiante, 0),  # Reference in coordinate system
+                    xycoords="data",  # Use coordinate system of data points
+                    xytext=(0, self.group_name_dy - 0.9),  # Offset from reference
+                    textcoords="offset fontsize",  # Offset value is relative to fontsize
+                    ha="center",
+                    va="top",
+                    weight="normal",
+                    fontsize=14,
+                    rotation=0,
+                )
 
         # Add labels and title
         # ax.set_xlabel("Module", fontsize=16)
+        if self.ylim is not None:
+            ax.set_ylim([0, self.ylim])
         ax.set_ylabel(self.ylabel, fontsize=16)
         ax.set_title(self.title, fontsize=16)
-        ax.legend(ncol=self.legend_cols, fontsize=14)  # loc="upper center"
+        ax.legend(ncol=self.legend_cols, fontsize=14, loc="upper left")
 
     def construct_subplot_broken_axis(self, ax: Any, data: ARRAY_T):
         assert data.shape == (len(self.groups), len(self.bars), len(self.sections))
@@ -265,15 +319,37 @@ class BarPlotter:
                 )
                 bottom += heights
 
-    def plot(self, data: ARRAY_T, filename: str) -> None:
+    def saturate_data(self, data: ARRAY_T, nb_saturated_bars: int = 0):
+        original_values = np.zeros(data.shape[0:-1])
 
+        altered_at_idx: list[tuple[np.intp, ...]] = []
+
+        for _ in range(nb_saturated_bars):
+            idx_max = np.unravel_index(np.argmax(data, axis=None), data.shape)
+            altered_at_idx.append(idx_max)
+            # Store original
+            value_max = data[idx_max]
+            original_values[idx_max[0:-1]] = value_max
+            # Temporarily set to 0
+            data[idx_max] = 0
+
+        # What is the largest bar that will not be saturated?
+        idx_max = np.unravel_index(np.argmax(data, axis=None), data.shape)
+        highest_value = data[idx_max]
+        saturated_value = highest_value * 1.5
+
+        # Restore the values previously set to 0 to the saturated value
+        for idx in altered_at_idx:
+            data[idx] = saturated_value
+
+        return data, original_values
+
+    def plot(self, data: ARRAY_T, filename: str) -> None:
+        plt.style.use("ggplot")
+        plt.rc("font", family="DejaVu Serif")
         _, ax = plt.subplots(figsize=(12, 6))
         self.construct_subplot(ax, data)
-        plt.rc("font", family="DejaVu Serif")
-        plt.style.use("ggplot")
-
         plt.yscale(self.scale)
-
         plt.tight_layout()
         plt.savefig(filename, transparent=False)
 
@@ -333,12 +409,12 @@ class BarPlotterSubfigures:
         # plt.rc("font", family="DejaVu Serif")
         # plt.style.use("ggplot")
         plt.tight_layout()
-        sleep(0.2)
         plt.savefig(filename, transparent=False)
 
     def plot(self, data: list[ARRAY_T], filename: str) -> None:
         assert len(data) == self.nb_plots
 
+        plt.style.use("ggplot")
         fig, axises = plt.subplots(
             nrows=self.subplot_rows, ncols=self.subplot_cols, width_ratios=self.width_ratios, figsize=(12, 6)
         )
@@ -347,8 +423,6 @@ class BarPlotterSubfigures:
             plotter.construct_subplot(ax, data_subplot)
 
         fig.suptitle(self.title)
-        plt.rc("font", family="DejaVu Serif")
-        plt.style.use("ggplot")
-        plt.tight_layout()
-        sleep(0.2)
+        # plt.rc("font", family="DejaVu Serif")
+        plt.tight_layout(pad=0.5, w_pad=0)
         plt.savefig(filename, transparent=False)

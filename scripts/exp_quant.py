@@ -105,4 +105,6 @@ if __name__ == "__main__":
             supergroups=["Prefill", "Decode"],
             title=f"{model.name} ({quant.name})",
             filename=f"{out_path}/energy_and_latency_{quant.name}_{model.name}.png",
+            ylim_energy=1.8e14,
+            ylim_latency=4.25e9,
         )

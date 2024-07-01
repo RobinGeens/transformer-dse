@@ -14,7 +14,7 @@ from zigzag.visualization.results.plot_cme import (
 
 sys.path.append(os.getcwd())
 from src.export_onnx import export_transformer_to_onnx
-from src.config import ALL_MODELS, BATCH_SIZE, LLAMA_2_7B, W32A32, W4A16, W8A8
+from src.config import ALL_MODELS, BATCH_SIZE, GPT3_175B, LLAMA_2_7B, W32A32, W4A16, W8A8
 from src.util import (
     CME_T,
     accelerator_path,

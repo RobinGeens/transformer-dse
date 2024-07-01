@@ -15,7 +15,7 @@ from src.plot_util import (
 )
 
 
-def plot_energy_clean(cmes: list[CME_T], filename: str = "plot.png"):
+def plot_energy_clean(cmes: list[CME_T], filename: str):
     """`cmes` correspond to `LAYERS_TO_PLOT`"""
     assert len(cmes) == 5, "Are these the CMEs from `LAYERS_TO_PLOT`?"
 
@@ -27,7 +27,7 @@ def plot_energy_clean(cmes: list[CME_T], filename: str = "plot.png"):
     p.plot(data, filename)
 
 
-def plot_energy_minimal(cmes: list[CME_T], filename: str = "plot.png"):
+def plot_energy_minimal(cmes: list[CME_T], filename: str):
     """`cmes` correspond to `LAYERS_TO_PLOT`"""
     assert len(cmes) == 5, "Are these the CMEs from `LAYERS_TO_PLOT`?"
 
@@ -43,9 +43,7 @@ def plot_energy_minimal(cmes: list[CME_T], filename: str = "plot.png"):
     p.plot(data, filename)
 
 
-def plot_energy_compare(
-    cmes_all: list[list[CME_T]], supergroups: list[str], title: str = "", filename: str = "plot.png"
-):
+def plot_energy_compare(cmes_all: list[list[CME_T]], supergroups: list[str], filename: str, title: str = ""):
     """`cmes` correspond to `LAYERS_TO_PLOT`"""
     assert all([len(cmes) == 5 for cmes in cmes_all]), "Are these the CMEs from `LAYERS_TO_PLOT`?"
     assert len(cmes_all) == len(supergroups)
@@ -63,9 +61,7 @@ def plot_energy_compare(
     p.plot(data, filename)
 
 
-def plot_energy_compare_minimal(
-    cmes_all: list[list[CME_T]], groups: list[str], title: str = "", filename: str = "plot.png"
-):
+def plot_energy_compare_minimal(cmes_all: list[list[CME_T]], groups: list[str], filename: str, title: str = ""):
     """1 bar corresponds to 1 layer, 1 group to a single zigzag simulation
     `cmes` correspond to `LAYERS_TO_PLOT`"""
     assert all([len(cmes) == 5 for cmes in cmes_all]), "Are these the CMEs from `LAYERS_TO_PLOT`?"
@@ -91,7 +87,7 @@ def plot_energy_compare_minimal(
     p.plot(data, filename)
 
 
-def plot_latency_clean(cmes: list[CME_T], filename: str = "plot.png"):
+def plot_latency_clean(cmes: list[CME_T], filename: str):
     """`cmes` correspond to `LAYERS_TO_PLOT`"""
     assert len(cmes) == 5, "Are these the CMEs from `LAYERS_TO_PLOT`?"
 
@@ -114,7 +110,11 @@ def plot_latency_clean(cmes: list[CME_T], filename: str = "plot.png"):
 
 
 def plot_latency_compare(
-    cmes_all: list[list[CME_T]], supergroups: list[str], title: str = "", filename: str = "plot.png"
+    cmes_all: list[list[CME_T]],
+    supergroups: list[str],
+    filename: str,
+    title: str = "",
+    ylim: float | None = None,
 ):
     """1 group corresponds to 1 layer (similar to `plot_energy_compare`)
     `cmes` correspond to `LAYERS_TO_PLOT`"""
@@ -145,13 +145,12 @@ def plot_latency_compare(
         group_name_dy=-1,
         ylabel="Latency (cycles)",
         title=title,
+        ylim=ylim,
     )
     p.plot(data, filename)
 
 
-def plot_latency_compare_minimal(
-    cmes_all: list[list[CME_T]], groups: list[str], title: str = "", filename: str = "plot.png"
-):
+def plot_latency_compare_minimal(cmes_all: list[list[CME_T]], groups: list[str], filename: str, title: str = ""):
     """1 group corresponds to single zigzag simulation
     `cmes` correspond to `LAYERS_TO_PLOT`"""
     assert all([len(cmes) == 5 for cmes in cmes_all]), "Are these the CMEs from `LAYERS_TO_PLOT`?"
@@ -174,15 +173,23 @@ def plot_latency_compare_minimal(
     p.plot(data, filename)
 
 
-def plot_energy_and_latency(cmes_all: list[list[CME_T]], supergroups: list[str], title: str, filename: str):
+def plot_energy_and_latency(
+    cmes_all: list[list[CME_T]],
+    supergroups: list[str],
+    title: str,
+    filename: str,
+    ylim_energy: float | None = None,
+    ylim_latency: float | None = None,
+):
     assert all([len(cmes) == 5 for cmes in cmes_all]), "Are these the CMEs from `LAYERS_TO_PLOT`?"
     assert len(cmes_all) == len(supergroups)
 
-    energy_groups = [f"{group}\n{supergroup}" for supergroup, group in itertools.product(supergroups, GROUPS)]
+    # energy_groups = [f"{group}\n{supergroup}" for supergroup, group in itertools.product(supergroups, GROUPS)]
+    energy_groups = len(supergroups) * GROUPS
     energy_bars = PlotCMEDetailed.energy_bars
     energy_sections = PlotCMEDetailed.energy_sections
 
-    latency_groups = supergroups
+    latency_groups = len(supergroups) * [""]
     latency_bars = GROUPS
     latency_sections = PlotCMEDetailed.latency_sections
 
@@ -200,27 +207,31 @@ def plot_energy_and_latency(cmes_all: list[list[CME_T]], supergroups: list[str],
         energy_groups,
         energy_bars,
         energy_sections,
+        supergroups=supergroups,
         bar_width=0.9,
         bar_spacing=0,
         group_spacing=0.7,
-        group_name_dy=-4.5,
+        group_name_dy=-4.8,
+        group_name_fontsize=12,
+        group_name_color="grey",
         xtick_rotation=90,
         ylabel="Energy (pJ)",
+        ylim=ylim_energy,
     )
     latency_plotter = BarPlotter(
         latency_groups,
         latency_bars,
         latency_sections,
+        supergroups=supergroups,
         bar_width=1.2,
         bar_spacing=0,
         group_spacing=0.8,
-        # xtick_labels=list(range(1, ))
-        # group_name_offset=0,
-        group_name_dy=-5.5,
+        group_name_dy=-4.8,
         ylabel="Latency (cycles)",
+        ylim=ylim_latency,
     )
 
-    p = BarPlotterSubfigures([energy_plotter, latency_plotter], subplot_cols=2, width_ratios=[2, 1], title=title)
+    p = BarPlotterSubfigures([energy_plotter, latency_plotter], subplot_cols=2, width_ratios=[3, 1], title=title)
     p.plot([energy_data, latency_data], filename)
 
 
